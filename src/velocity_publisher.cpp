@@ -15,7 +15,7 @@ Mode current_mode = recover_altitude;
 const float desired_wall_dist = 5.0;
 const float desired_altitude = 5.0;
 const float altitude_entry_tolerance = 0.2;
-const float altitude_exit_tolerance = 0.5;
+const float altitude_exit_tolerance = 1;
 const float confidence_threshold = 10;
 const int laser_rf_offset = 90;				// lidar leads robot x axis (east) by 90 degrees in simulation and 180 degrees on the actual quad
 						// verify and make sure that both are anticlockwise
@@ -25,10 +25,11 @@ bool new_data = 0;
 float hold_error;
 float hold_velocity;
 float prev_hold_errors[5];
-const float Kp = 0.22;
+const float Kp = 1;
 const float Kd = 0.15;
 const float Ki = 0;
 float max_velocity = 0.5;
+float nominal_velocity = 0.5;
 
 geometry_msgs::PoseStamped local_pose;
 mavros_msgs::State current_state;
@@ -116,32 +117,53 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	if(current_mode == follow_wall){
 		ROS_INFO("follow wall mode");
 		
-		//int theta_rf_hold = -(hough_angle_rf + laser_rf_offset);
+		// hold velocity computation in x and y directions based on robot's current orientation; PID regulation used;
 		int theta_rf_hold = hough_lines.angle[0] + laser_rf_offset;	// theta_rf_hold is the angle of the wall from the robot x-axis (East)
 		hold_error = (hough_lines.dist[0] - desired_wall_dist);
-
 		if(new_data){
 			hold_velocity = PID(hold_error,prev_hold_errors);
 			new_data = 0;
 		}
-		//hold_velocity = PID(hold_error, prev_hold_errors);
 		float x_rf_hold = hold_velocity * cos (theta_rf_hold * M_PI / 180.0);
 		float y_rf_hold = hold_velocity * sin (theta_rf_hold * M_PI / 180.0);
 
+
+		// move velocity computation in x and y direction based on robot's current orientation; open loop constant nominal velocity;
+		int theta_rf_move = theta_rf_hold - 90;
+		float x_rf_move = nominal_velocity * cos (theta_rf_move * M_PI / 180.0);
+		float y_rf_move = nominal_velocity * sin (theta_rf_move * M_PI / 180.0);
+
+		// combining hold velocity and move velocity (alternatively using one or the other)
+		float x_rf, y_rf;
+
+		if(hold_error < 1){						// follow wall (move) and correct distance from wall
+			x_rf = x_rf_hold + x_rf_move;
+			y_rf = y_rf_hold + y_rf_move;
+			ROS_INFO("move");
+		}
+
+		else{								// only correct distance to wall
+			x_rf = x_rf_hold;
+			y_rf = y_rf_hold;
+			ROS_INFO("stay");
+		}
+
 		ROS_INFO("x_rf_hold: %f 	y_rf_hold: %f", x_rf_hold, y_rf_hold);
 
-		target_vel.velocity.x = x_rf_hold; // * 0.25;
-		target_vel.velocity.y = y_rf_hold; // * 0.25;
+		target_vel.velocity.x = x_rf; // * 0.25;
+		target_vel.velocity.y = y_rf; // * 0.25;
 		target_vel.velocity.z = 0;
-		target_vel.velocity.x = limit_velocity(target_vel.velocity.x);
-		target_vel.velocity.y = limit_velocity(target_vel.velocity.y);
-		target_vel.velocity.z = limit_velocity(target_vel.velocity.z);
+		//target_vel.velocity.x = limit_velocity(target_vel.velocity.x);
+		//target_vel.velocity.y = limit_velocity(target_vel.velocity.y);
+		//target_vel.velocity.z = limit_velocity(target_vel.velocity.z);
 		ROS_INFO("current wall distance: %f", hough_lines.dist[0]);
 		ROS_INFO("target vel x = %f,  y = %f,  z = %f", target_vel.velocity.x, target_vel.velocity.y, target_vel.velocity.z);
 		ROS_INFO("\n\n\n");
 
 		
 	}
+
+
 	else{
 		//recover_altitude;
 		ROS_INFO("recover altitude mode");
