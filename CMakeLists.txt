@@ -166,6 +166,7 @@ include_directories(
 add_executable(${PROJECT_NAME}_pc_subscriber src/pc_subscriber.cpp)
 target_link_libraries(${PROJECT_NAME}_pc_subscriber ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_pc_subscriber ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_pc_subscriber ${PROJECT_NAME}_gencpp)
 add_definitions(${PCL_DEFINITIONS})
 
 add_executable(${PROJECT_NAME}_velocity_publisher src/velocity_publisher.cpp)
