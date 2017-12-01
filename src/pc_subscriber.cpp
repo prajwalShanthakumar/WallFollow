@@ -24,13 +24,17 @@ float x;
 float y;
 };
 
+
+
 const float xmin = 1;
 const float xmax = 20;
 const float ymin = 1;
 const float ymax = 20;
+
+const float resolution = 0.1;		//# metres
+
 const int theta_max = 360;			//# degrees
 const int r_lim = 100;				//# metres
-const float resolution = 0.3;		//# metres
 const int r_max = r_lim/resolution;
 const int min_line_sep_dist = 2; //# metres
 const int min_line_sep_angle = 45;//# degrees
@@ -85,6 +89,51 @@ void preprocess_cloud(const sensor_msgs::PointCloud2::ConstPtr& msg){
 
 
 
+class lineVisualizer{
+public:
+	visualization_msgs::Marker points;
+	visualization_msgs::Marker line_list;
+	lineVisualizer(){
+		points.header.frame_id = "/laser_frame";
+		points.header.stamp = ros::Time::now();
+		points.ns = "points_and_lines";
+		points.pose.orientation.w = 1.0;
+		points.id = 0;
+		points.type = visualization_msgs::Marker::POINTS;
+		points.scale.x = 0.2;
+		points.scale.y = 0.2;
+		points.color.g = 1.0;
+	    	points.color.a = 1.0;
+
+		line_list.header.frame_id = "/laser_frame";
+		line_list.header.stamp = ros::Time::now();
+		line_list.ns = "points_and_lines";
+		line_list.action = visualization_msgs::Marker::ADD;
+		line_list.pose.orientation.w = 1.0;
+		line_list.id = 2;
+		line_list.type = visualization_msgs::Marker::LINE_LIST;
+		line_list.scale.x = 0.1;
+		line_list.color.r = 1.0;
+		line_list.color.a = 1.0;	
+	}
+	void createVisual(Line line1){
+			geometry_msgs::Point p, p1, p2;				// p1 and p2 define the end points of the line that represents the wall, p defines the nearest point on the wall
+			
+			p.x = r_theta_to_XY(line1.dist,line1.angle).x;			// nearest point visualization
+			p.y = r_theta_to_XY(line1.dist,line1.angle).y;
+			p.z = 0;
+			points.points.push_back(p);
+	
+			p1.x = p.x + 10 * cos( (line1.angle + 90) * M_PI / 180.0);	// line visualization
+			p1.y = p.y + 10 * sin( (line1.angle + 90) * M_PI / 180.0);
+			p1.z = 0;
+			p2.x = p.x - 10 * cos( (line1.angle + 90) * M_PI / 180.0);
+			p2.y = p.y - 10 * sin( (line1.angle + 90) * M_PI / 180.0);
+			p2.z = 0;
+			line_list.points.push_back(p1);
+			line_list.points.push_back(p2);
+	}
+};
 
 
 void clear_accumulator(){
@@ -94,13 +143,15 @@ void clear_accumulator(){
 		}
 	}
 }
+
 void compute_r_theta(){
 
 	for(int i = 0; i < valid_indices.size(); i++){		
 		for(int theta = 0; theta < theta_max; theta++){
-			int r =   (cloud[valid_indices[i]].x * cos(theta*M_PI/180.0) + cloud[valid_indices[i]].y * sin(theta*M_PI/180.0)) / resolution;	// scale by resolution because we can't index into an array with floats
+			int r =   (cloud[valid_indices[i]].x * cos(theta*M_PI/180.0) + cloud[valid_indices[i]].y * sin(theta*M_PI/180.0)) / resolution;	
+					// scale by resolution because we can't index into an array with floats
 
-			if(r > 0)												// only allow positive values of r to eliminate errors because of duplicates (since we are considering 0 to 360)
+			if(r > 0)			// only allow positive values of r to eliminate errors because of duplicates (since we are considering 0 to 360)
 				accumulator[theta][r] = accumulator[theta][r] + 1;
 		}	
 	}
@@ -159,69 +210,27 @@ void hough_transform(){
 	clear_accumulator();
 	compute_r_theta();
 	
-	visualization_msgs::Marker points;
-	points.header.frame_id = "/laser_frame";
-	points.header.stamp = ros::Time::now();
-	points.ns = "points_and_lines";
-	points.pose.orientation.w = 1.0;
-	points.id = 0;
-	points.type = visualization_msgs::Marker::POINTS;
-	points.scale.x = 0.2;
-	points.scale.y = 0.2;
-	points.color.g = 1.0;
-    points.color.a = 1.0;
-
-	visualization_msgs::Marker line_list;
-	line_list.header.frame_id = "/laser_frame";
-	line_list.header.stamp = ros::Time::now();
-	line_list.ns = "points_and_lines";
-	line_list.action = visualization_msgs::Marker::ADD;
-	line_list.pose.orientation.w = 1.0;
-	line_list.id = 2;
-	line_list.type = visualization_msgs::Marker::LINE_LIST;
-	line_list.scale.x = 0.1;
-	line_list.color.r = 1.0;
-	line_list.color.a = 1.0;
-
 	wall_follow::Lines my_lines;
 	my_lines.num_lines = 0;
-	//my_lines.dist[0] = 5;
-	//my_lines.angle[0] = 60;
-	
 
+	lineVisualizer visual;
 	for(int i = 0; i < 1; i++){
 		
 		Line line1 = find_best_line_and_remove();
 
-		//if(line1.confidence < threshold)
-		//	break;
+		visual.createVisual(line1);
 
 		my_lines.num_lines++;
 		my_lines.dist[i] = line1.dist;
 		my_lines.angle[i] = line1.angle;
 		my_lines.confidence[i] = line1.confidence;
-
-		geometry_msgs::Point p, p1, p2;
-		p.x = r_theta_to_XY(line1.dist,line1.angle).x;
-		p.y = r_theta_to_XY(line1.dist,line1.angle).y;
-		p.z = 0;
-		points.points.push_back(p);
-	
-		p1.x = p.x + 10 * cos( (line1.angle + 90) * M_PI / 180.0);
-		p1.y = p.y + 10 * sin( (line1.angle + 90) * M_PI / 180.0);
-		p1.z = 0;
-		p2.x = p.x - 10 * cos( (line1.angle + 90) * M_PI / 180.0);
-		p2.y = p.y - 10 * sin( (line1.angle + 90) * M_PI / 180.0);
-		p2.z = 0;
-		line_list.points.push_back(p1);
-		line_list.points.push_back(p2);
+			
 	}
 
-	marker_pub.publish(points);
-	marker_pub.publish(line_list);
+	marker_pub.publish(visual.points);
+	marker_pub.publish(visual.line_list);
+
 	lines_pub.publish(my_lines);
-	
-	
 
 	//Line line2 = find_best_line_and_remove();
 	//Line line3 = find_best_line_and_remove();
@@ -240,6 +249,7 @@ int main(int argc, char **argv){
 	ros::Subscriber sub = n.subscribe("pc2", 10, pc_Callback);
 	marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 	lines_pub = n.advertise<wall_follow::Lines>("ho/li",10);
+	
 	ros::spin();
 	return 0;
 }

@@ -25,8 +25,8 @@ bool new_data = 0;
 float hold_error;
 float hold_velocity;
 float prev_hold_errors[5];
-const float Kp = 1;
-const float Kd = 0.15;
+const float Kp = 0.4;
+const float Kd = 0.3;
 const float Ki = 0;
 float max_velocity = 0.5;
 float nominal_velocity = 0.5;
@@ -136,7 +136,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 		// combining hold velocity and move velocity (alternatively using one or the other)
 		float x_rf, y_rf;
 
-		if(hold_error < 1){						// follow wall (move) and correct distance from wall
+		if(fabs(hold_error) < 1){						// follow wall (move) and correct distance from wall
 			x_rf = x_rf_hold + x_rf_move;
 			y_rf = y_rf_hold + y_rf_move;
 			ROS_INFO("move");
@@ -179,7 +179,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 		}*/
 		//target_vel.velocity.x = limit_velocity(target_vel.velocity.x);
 		//target_vel.velocity.y = limit_velocity(target_vel.velocity.y);
-		target_vel.velocity.z = limit_velocity(target_vel.velocity.z);
+		//target_vel.velocity.z = limit_velocity(target_vel.velocity.z);
 
 		ROS_INFO("current altitude: %f", local_pose.pose.position.z);
 		ROS_INFO("target vel x = %f,  y = %f,  z = %f", target_vel.velocity.x, target_vel.velocity.y, target_vel.velocity.z);
@@ -226,7 +226,7 @@ int main(int argc, char **argv){
 	target_vel.type_mask = 0b111111111000;
 	target_vel.position.x = 0;
 	target_vel.position.y = 0;
-	target_vel.position.z = 2;
+	target_vel.position.z = 1;
 
 	for(int i = 100; ros::ok() && i > 0; --i){
 		velocity_pub.publish(target_vel);
@@ -243,10 +243,12 @@ int main(int argc, char **argv){
     arm_cmd.request.value = true;
 
     ros::Time last_request = ros::Time::now();
-
+	
+		
 //__________________________________________________________________________________________________________________ #mainloop
 
     while(ros::ok()){
+
         if( current_state.mode != "OFFBOARD" &&
             (ros::Time::now() - last_request > ros::Duration(5.0))){
             if( set_mode_client.call(offb_set_mode) &&
@@ -264,6 +266,7 @@ int main(int argc, char **argv){
                 last_request = ros::Time::now();
             }
         }
+
 
 
         ros::spinOnce();
