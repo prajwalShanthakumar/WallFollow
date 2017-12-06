@@ -18,10 +18,12 @@ const float desired_altitude = 1.0;
 const float confidence_threshold = 17;
 const int laser_rf_offset = 180;				// lidar (Sweep) leads robot x axis (east) by 90 degrees in simulation and 180 degrees on the actual quad
 						// verify and make sure that both are anticlockwise
+const float move_threshold_vertical = 1.0;			// metre
+const float move_threshold_horizontal = 1.0;
 
 bool new_data = 0;
 
-float hold_error;
+float hold_error;// = 1000;		// initialize to very large number so that start off in "stay" rather than "move". Not a problem if sweep data appears before flight
 float hold_velocity;
 float prev_hold_errors[5];
 float altitude_error;
@@ -31,6 +33,7 @@ const float Kp = 1.75;
 const float Kd = 0.4;
 const float Ki = 0.1;
 float max_velocity = 1.35;
+float nominal_velocity = 0.75;
 
 geometry_msgs::PoseStamped local_pose;
 mavros_msgs::State current_state;
@@ -98,10 +101,9 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	ROS_INFO("confidence: %d", hough_lines.confidence[0]);
  
 	
-
+		// computing hold velocity
 		int theta_rf_hold = hough_lines.angle[0] + laser_rf_offset;	
-
-		hold_error = (hough_lines.dist[0] - desired_wall_dist);
+		hold_error = (hough_lines.dist[0] - desired_wall_dist);				// !!! IMPORTANT THAT HOLD_ERROR MAINTAINS VALUE FROM PREV FUNC CALL
 		if(new_data){
 			if(hough_lines.confidence[0] > confidence_threshold){
 				hold_velocity = PID(hold_error,prev_hold_errors);
@@ -111,13 +113,31 @@ mavros_msgs::PositionTarget computeTargetVel(){
 			}
 			new_data = 0;
 		}
+		float x_rf_hold = hold_velocity * cos (theta_rf_hold * M_PI / 180.0);
+		float y_rf_hold = hold_velocity * sin (theta_rf_hold * M_PI / 180.0);
 
+		// altitude velocity
 		altitude_error = desired_altitude - local_pose.pose.position.z;
 		altitude_velocity = PID(altitude_error, prev_altitude_errors);
+		
+		// move velocity computation in x and y direction based on robot's current orientation; open loop constant nominal velocity;
+		int theta_rf_move = theta_rf_hold - 90;
+		float x_rf_move = nominal_velocity * cos (theta_rf_move * M_PI / 180.0);
+		float y_rf_move = nominal_velocity * sin (theta_rf_move * M_PI / 180.0);
 
-		target_vel.velocity.x = hold_velocity * cos (theta_rf_hold * M_PI / 180.0); 
-		target_vel.velocity.y = hold_velocity * sin (theta_rf_hold * M_PI / 180.0);
-		target_vel.velocity.z = altitude_velocity;
+		// state machine
+		if( (fabs(hold_error) < move_threshold_horizontal) && (fabs(altitude_error) < move_threshold_vertical) ){ 
+			target_vel.velocity.x = x_rf_hold + x_rf_move;		//scaling factor for move can be (move_threshold - fabs(hold_error)) / fabs(move_threshold)
+			target_vel.velocity.y = y_rf_hold + y_rf_move;
+			target_vel.velocity.z = altitude_velocity;
+			ROS_INFO("move");
+		}
+		else{
+			target_vel.velocity.x = x_rf_hold;
+			target_vel.velocity.y = y_rf_hold;
+			target_vel.velocity.z = altitude_velocity;
+			ROS_INFO("stay");
+		}
 
 	return target_vel;
 }

@@ -193,6 +193,9 @@ add_executable(${PROJECT_NAME}_maintain_distance src/maintain_distance.cpp)
 target_link_libraries(${PROJECT_NAME}_maintain_distance ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_maintain_distance ${catkin_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_nominal_velocity src/nominal_velocity.cpp)
+target_link_libraries(${PROJECT_NAME}_nominal_velocity ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_nominal_velocity ${catkin_LIBRARIES})
 
 
 #############
