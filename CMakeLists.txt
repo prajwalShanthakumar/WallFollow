@@ -181,6 +181,19 @@ add_executable(${PROJECT_NAME}_offb_node src/offb_node.cpp)
 target_link_libraries(${PROJECT_NAME}_offb_node ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_offb_node ${catkin_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_offboard_velocity_test src/offboard_velocity_test.cpp)
+target_link_libraries(${PROJECT_NAME}_offboard_velocity_test ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_offboard_velocity_test ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_offboard_altitude_hold src/offboard_altitude_hold.cpp)
+target_link_libraries(${PROJECT_NAME}_offboard_altitude_hold ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_offboard_altitude_hold ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_maintain_distance src/maintain_distance.cpp)
+target_link_libraries(${PROJECT_NAME}_maintain_distance ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_maintain_distance ${catkin_LIBRARIES})
+
+
 
 #############
 ## Install ##

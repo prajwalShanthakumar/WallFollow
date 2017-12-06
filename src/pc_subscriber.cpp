@@ -24,17 +24,17 @@ float x;
 float y;
 };
 
-const float xmin = 1;
-const float xmax = 20;
-const float ymin = 1;
-const float ymax = 20;
+const float xmin = 0.1;
+const float xmax = 5;
+const float ymin = 0.1;
+const float ymax = 5;
 const int theta_max = 360;			//# degrees
-const int r_lim = 100;				//# metres
-const float resolution = 0.3;		//# metres
+const int r_lim = 10;				//# metres
+const float resolution = 0.1;		//# metres
 const int r_max = r_lim/resolution;
 const int min_line_sep_dist = 2; //# metres
 const int min_line_sep_angle = 45;//# degrees
-const int threshold = 10;
+const int threshold = 5;
 
 //tf::getYaw
 
@@ -97,7 +97,7 @@ void clear_accumulator(){
 void compute_r_theta(){
 
 	for(int i = 0; i < valid_indices.size(); i++){		
-		for(int theta = 0; theta < theta_max; theta++){
+		for(int theta = 240; theta < 300; theta++){
 			int r =   (cloud[valid_indices[i]].x * cos(theta*M_PI/180.0) + cloud[valid_indices[i]].y * sin(theta*M_PI/180.0)) / resolution;	// scale by resolution because we can't index into an array with floats
 
 			if(r > 0)												// only allow positive values of r to eliminate errors because of duplicates (since we are considering 0 to 360)
