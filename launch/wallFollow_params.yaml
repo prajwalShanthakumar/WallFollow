@@ -1,0 +1,28 @@
+sensing_range:
+  min: 0.5
+  max: 10
+  resolution: 0.1
+  laser_rf_offset: 90
+# lidar leads robot x axis (east) by 90 degrees in simulation and 180 degrees on the actual quad
+# verify and make sure that both are anticlockwise
+
+line_region:
+  theta_min: 240
+  theta_max: 300
+  min_line_separation_dist: 2 # currently unused
+  min_line_separation_angle: 45 # currently unused
+  threshold: 15
+
+flight:
+  desired_wall_dist: 1.5
+  desired_altitude: 1.5
+  altitude_entry_tolerance: 0.2 # currently unused
+  altitude_exit_tolerance: 1 # currently unused
+
+
+control:
+  max_velocity: 0.5
+  nominal_velocity: 0.5
+  Kp: 0.4
+  Kd: 0.3
+  Ki: 0
