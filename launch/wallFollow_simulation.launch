@@ -1,6 +1,8 @@
 <launch>
-	<rosparam command="load" file="$(find wall_follow)/launch/wallFollow_params.yaml"/>
+	<!--rosparam command="load" file="$(find wall_follow)/launch/wallFollow_params.yaml"/-->
 	<!--param name="control/max_velocity"	type="double"	value="2.0"/-->
-	<!--node pkg="wall_follow" type="wall_follow_pc_subscriber" name="pc_subscriber"/-->
-	<!--node pkg="wall_follow" type="wall_follow_maintain_distance" name="maintain_distance"/-->
+	
+	<include file="$(find px4)/launch/mavros_posix_sitl.launch"/>
+	<node pkg="wall_follow" type="wall_follow_scan_to_pc" name="scan_to_pc"/>
+	<include file="$(find wall_follow)/launch/wallFollow.launch"/>
 </launch>
