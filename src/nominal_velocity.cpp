@@ -12,11 +12,12 @@
 
 enum Mode {follow_wall, recover_altitude};
 Mode current_mode = recover_altitude;
-const float desired_wall_dist = 1.7;
-const float desired_altitude = 1.0;
 
-const float confidence_threshold = 17;
-const int laser_rf_offset = 180;				// lidar (Sweep) leads robot x axis (east) by 90 degrees in simulation and 180 degrees on the actual quad
+float desired_wall_dist = 1.7;
+float desired_altitude = 1.0;
+
+int confidence_threshold = 17;
+int laser_rf_offset = 90;				// lidar (Sweep) leads robot x axis (east) by 90 degrees in simulation and 180 degrees on the actual quad
 						// verify and make sure that both are anticlockwise
 const float move_threshold_vertical = 1.0;			// metre
 const float move_threshold_horizontal = 1.0;
@@ -29,9 +30,10 @@ float prev_hold_errors[5];
 float altitude_error;
 float altitude_velocity;
 float prev_altitude_errors[5];
-const float Kp = 1.75;
-const float Kd = 0.4;
-const float Ki = 0.1;
+
+float Kp = 1.75;
+float Kd = 0.4;
+float Ki = 0.1;
 float max_velocity = 1.35;
 float nominal_velocity = 0.75;
 
@@ -72,7 +74,7 @@ float PID(float error, float prev_error[]){
 	float D = (error - prev_error[0]) * Kd;
 	float I = (prev_error[0] +  prev_error[1] + prev_error[2] + prev_error[3] + prev_error[4]) * Ki;
 	
-	ROS_INFO("cur_error = %f, prev_error = %f, difference = %f", error, prev_error[0], error - prev_error[0]);
+	//ROS_INFO("cur_error = %f, prev_error = %f, difference = %f", error, prev_error[0], error - prev_error[0]);
 
 	prev_error[4] = prev_error[3];
 	prev_error[3] = prev_error[2];
@@ -98,7 +100,9 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	
 
 	ROS_INFO("altitude: %f", local_pose.pose.position.z);
+	ROS_INFO("wall_dist: %f", hough_lines.dist[0]);
 	ROS_INFO("confidence: %d", hough_lines.confidence[0]);
+	
  
 	
 		// computing hold velocity
@@ -139,7 +143,37 @@ mavros_msgs::PositionTarget computeTargetVel(){
 			ROS_INFO("stay");
 		}
 
+		ROS_INFO("vel x: %f", target_vel.velocity.x);
+		ROS_INFO("vel y: %f", target_vel.velocity.y);
+		ROS_INFO("vel z: %f\n\n\n", target_vel.velocity.z);
+
 	return target_vel;
+}
+
+void getAllParams(ros::NodeHandle n){
+
+	//n.getParam("/sensing_range/resolution",resolution);
+	n.getParam("/control/Kp",Kp);
+	n.getParam("/control/Kd",Kd);
+	n.getParam("/control/Ki",Ki);
+	
+	n.getParam("/control/max_velocity",max_velocity);
+	n.getParam("/control/nominal_velocity",nominal_velocity);
+	n.getParam("/line_region/threshold",confidence_threshold);
+
+	n.getParam("/flight/desired_wall_dist", desired_wall_dist);
+	n.getParam("/flight/desired_altitude", desired_altitude);
+	n.getParam("/sensing_range/laser_rf_offset", laser_rf_offset);
+
+	ROS_INFO("Kp: %f", Kp);
+	ROS_INFO("Kd: %f", Kd);
+	ROS_INFO("Ki: %f", Ki);
+	ROS_INFO("max_velocity: %f",max_velocity);
+	ROS_INFO("nominal_velocity: %f",nominal_velocity);
+	ROS_INFO("line threshold: %d", confidence_threshold);
+	ROS_INFO("desired_wall_dist: %f",desired_wall_dist);
+	ROS_INFO("desired_altitude: %f",desired_altitude);
+	ROS_INFO("laser_rf_offset: %d",laser_rf_offset);
 }
 
 
@@ -148,7 +182,7 @@ int main(int argc, char **argv){
 
     	ros::init(argc, argv, "maintain_dist_node");
    	ros::NodeHandle nh;
-
+	getAllParams(nh);
 	ros::Subscriber lines_sub = nh.subscribe<wall_follow::Lines>("ho/li",10,lines_cb);	// CHECK THIS!!! BUFFER MEANS OLD DATA!
 	ros::Publisher velocity_pub = nh.advertise<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/local",10);
 	ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("mavros/local_position/pose", 10, local_pose_cb);

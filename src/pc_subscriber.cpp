@@ -24,17 +24,23 @@ float x;
 float y;
 };
 
-const float xmin = 0.1;
-const float xmax = 5;
-const float ymin = 0.1;
-const float ymax = 5;
+const float xmin = 0.5;		
+const float xmax = 7;
+const float ymin = 0.5;
+const float ymax = 7;
+
 const int theta_max = 360;			//# degrees
+const int r_max = 200;				// rmax = rlim/resolution
+
 const int r_lim = 10;				//# metres
-const float resolution = 0.1;		//# metres
-const int r_max = r_lim/resolution;
-const int min_line_sep_dist = 2; //# metres
-const int min_line_sep_angle = 45;//# degrees
-const int threshold = 5;
+const float resolution = 0.1;			//# metres
+
+const int min_line_sep_dist = 2; 		//# metres
+const int min_line_sep_angle = 45;		//# degrees
+
+int threshold;
+int lr_theta_min;
+int lr_theta_max;
 
 //tf::getYaw
 
@@ -97,7 +103,13 @@ void clear_accumulator(){
 void compute_r_theta(){
 
 	for(int i = 0; i < valid_indices.size(); i++){		
-		for(int theta = 240; theta < 300; theta++){
+		for(int iter_theta = lr_theta_min; iter_theta < lr_theta_max; iter_theta++){
+			int theta;
+			if(iter_theta < 0)				// using theta = 0-360, so avoid negative values
+				theta = 360 + iter_theta;		// eg.: -10 transforms to 360 + (-10) = 350; -10 and 350 are the same thing...
+			else
+				theta = iter_theta;
+
 			int r =   (cloud[valid_indices[i]].x * cos(theta*M_PI/180.0) + cloud[valid_indices[i]].y * sin(theta*M_PI/180.0)) / resolution;	// scale by resolution because we can't index into an array with floats
 
 			if(r > 0)												// only allow positive values of r to eliminate errors because of duplicates (since we are considering 0 to 360)
@@ -230,13 +242,29 @@ void hough_transform(){
 
 
 void pc_Callback(const sensor_msgs::PointCloud2::ConstPtr& msg){
+	//ros::Time begin = ros::Time::now();
 	preprocess_cloud(msg);
 	hough_transform();
+	//ros::Time end = ros::Time::now();
+	//ROS_INFO("callback (line extraction) time = %f", end.toSec() - begin.toSec());
+	
+}
+
+void getAllParams(ros::NodeHandle n){
+
+	//n.getParam("/sensing_range/resolution",resolution);
+	n.getParam("/line_region/theta_min",lr_theta_min);
+	n.getParam("/line_region/theta_max",lr_theta_max);
+	n.getParam("/line_region/threshold",threshold);
+	ROS_INFO("line region theta min: %d",lr_theta_min);
+	ROS_INFO("line region theta max: %d",lr_theta_max);
+	ROS_INFO("line threshold: %d", threshold);
 }
 
 int main(int argc, char **argv){
 	ros::init(argc, argv, "pc_subscriber");
 	ros::NodeHandle n;
+	getAllParams(n);
 	ros::Subscriber sub = n.subscribe("pc2", 10, pc_Callback);
 	marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 	lines_pub = n.advertise<wall_follow::Lines>("ho/li",10);
