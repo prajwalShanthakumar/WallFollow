@@ -1,0 +1,6 @@
+<launch>
+	<rosparam command="load" file="$(find wall_follow)/launch/wallFollow_params.yaml"/>
+	<!--param name="control/max_velocity"	type="double"	value="2.0"/-->
+	<!--node pkg="wall_follow" type="wall_follow_pc_subscriber" name="pc_subscriber"/-->
+	<!--node pkg="wall_follow" type="wall_follow_maintain_distance" name="maintain_distance"/-->
+</launch>

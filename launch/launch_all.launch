@@ -1,0 +1,4 @@
+<arg name="rotation_speed" default="3" />
+<launch file="$(find sweep_ros)/launch/sweep.launch">
+	<arg name="rotation_speed" value="$(rotation_speed)" />
+</launch>
