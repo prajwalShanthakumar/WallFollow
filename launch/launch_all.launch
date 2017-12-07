@@ -1,4 +1,8 @@
-<arg name="rotation_speed" default="3" />
-<launch file="$(find sweep_ros)/launch/sweep.launch">
-	<arg name="rotation_speed" value="$(rotation_speed)" />
+<launch>
+<arg name="freq" default="3" />
+<include file="$(find mavros)/launch/px4.launch"/>
+<include file="$(find sweep_ros)/launch/sweep.launch">
+	<arg name="freq" value="$(arg freq)" />
+</include>
+<include file="$(find wall_follow)/launch/wallFollow.launch"/>
 </launch>
