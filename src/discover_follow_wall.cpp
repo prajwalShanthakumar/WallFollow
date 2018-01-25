@@ -29,10 +29,13 @@ const float move_threshold_horizontal = 1.0;
 
 float LOWER_ALTITUDE_LIMIT = 50;
 float UPPER_ALTITUDE_LIMIT = 10;
-float DESIRED_BUFFER = 1.0;
+float DESIRED_BUFFER = 6.0;
 int NO_WALL_COUNT = 0;
 float NOMINAL_Z = 0.5;
 int NO_WALL_THRESHOLD = 5;
+int move_iters = 0;
+int DESIRED_MOVE_iters = 10 * 20; // desired num of seconds * velocity publishing rate
+
 
 bool new_data = 0;
 
@@ -101,7 +104,7 @@ float PID(float error, float prev_error[]){
 
 HOR_VEL compute_hold_velocity(int angle, float dist, int confidence){
 	int angle_rf = angle + laser_rf_offset;
-	float hold_error = dist - desired_wall_dist;
+	hold_error = dist - desired_wall_dist;
 	if(new_data){
 			if(confidence > CONFIDENCE_THRESHOLD){
 				hold_velocity = PID(hold_error,prev_hold_errors);
@@ -122,7 +125,7 @@ HOR_VEL compute_hold_velocity(int angle, float dist, int confidence){
 }
 
 float compute_altitude_velocity(float altitude){
-	float altitude_error = desired_altitude - local_pose.pose.position.z;
+	altitude_error = desired_altitude - local_pose.pose.position.z;
 	altitude_velocity = PID(altitude_error, prev_altitude_errors);
 	return altitude_velocity;
 }
@@ -167,7 +170,10 @@ mavros_msgs::PositionTarget computeTargetVel(){
 		}
 
 		else{ 								// altitude is less than LOWER_ALTITUDE_LIMIT, give up
-			mode = DO_NOTHING;	
+			//mode = DO_NOTHING;	
+			target_vel.velocity.x = 0;
+			target_vel.velocity.y = 0;
+			target_vel.velocity.z = 0;
 		}	
 	}
 
@@ -182,8 +188,9 @@ mavros_msgs::PositionTarget computeTargetVel(){
 		target_vel.velocity.z = altitude_vel;
 
 		if(NO_WALL_COUNT > NO_WALL_THRESHOLD){
-			mode = REFIND_WALL;
+			mode = DISCOVER_WALL;
 		}
+
 		else if( (fabs(hold_error) < move_threshold_horizontal) && (fabs(altitude_error) < move_threshold_vertical) ){
 			mode = NOMINAL_VELOCITY;
 		}
@@ -191,6 +198,20 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	}
 
 	else if(mode == NOMINAL_VELOCITY){
+		
+		if(move_iters <= DESIRED_MOVE_iters * 2){		
+			move_iters++;
+		}
+
+		if(move_iters == DESIRED_MOVE_iters){	// change direction
+			nominal_velocity = nominal_velocity * -1;
+		}
+
+		if(move_iters >= DESIRED_MOVE_iters * 2){	// stop
+			nominal_velocity = 0;
+		}
+
+		ROS_INFO("Nom: %f", nominal_velocity);
 		HOR_VEL hold_vel = compute_hold_velocity(hough_lines.angle[0], hough_lines.dist[0], hough_lines.confidence[0]);	// maintain desired distance
 
 		float altitude_vel = compute_altitude_velocity(local_pose.pose.position.z);	// reach desired altitude
@@ -202,23 +223,28 @@ mavros_msgs::PositionTarget computeTargetVel(){
 		target_vel.velocity.z = altitude_vel;
 
 		if(NO_WALL_COUNT > NO_WALL_THRESHOLD){
-			mode = REFIND_WALL;
+			mode = DISCOVER_WALL;
+		}
+
+		else if( (fabs(hold_error) > move_threshold_horizontal) || (fabs(altitude_error) > move_threshold_vertical) ){
+			mode = SETTLE_IN;
 		}
 	}
 
-	else if(mode == REFIND_WALL){
+	/*else if(mode == REFIND_WALL){
+		target_vel.velocity.x = 0;
+		target_vel.velocity.y = 0;
+		target_vel.velocity.z = 0;
+	}*/
+
+	/*else if(mode == DO_NOTHING){
 		target_vel.velocity.x = 0;
 		target_vel.velocity.y = 0;
 		target_vel.velocity.z = 0;
 	}
+	*/
 
-	else if(mode == DO_NOTHING){
-		target_vel.velocity.x = 0;
-		target_vel.velocity.y = 0;
-		target_vel.velocity.z = 0;
-	}
-
-	else{
+	else{	// SAFETY; WILL NEVER COME INTO THIS BLOCK;
 		target_vel.velocity.x = 0;
 		target_vel.velocity.y = 0;
 		target_vel.velocity.z = 0;
