@@ -1,6 +1,6 @@
 sensing_range:
   min: 0.5 # currently hardcoded in code
-  max: 7 # currently hardcoded in code
+  max: 15 # currently hardcoded in code
   resolution: 0.1 # currently hardcoded in code
   laser_rf_offset: 90
 
@@ -8,22 +8,29 @@ sensing_range:
 # verify and make sure that both are anticlockwise
 
 line_region:
-  theta_min: -30
-  theta_max: 30
+  theta_min: -40
+  theta_max: 40
   threshold: 15
   min_line_separation_dist: 2 # currently unused
   min_line_separation_angle: 45 # currently unused
 
 flight:
   desired_wall_dist: 3.5
-  desired_altitude: 4
+  desired_altitude: 4           # overwritten in code when wall found
   altitude_entry_tolerance: 0.2 # currently unused
-  altitude_exit_tolerance: 1 # currently unused
-
+  altitude_exit_tolerance: 1    # currently unused
+  NO_WALL_THRESHOLD: 5          # no of LIDAR scans without wall that can be tolerated before we switch to discover wall (potentially problematic)
+  DESIRED_MOVE_seconds: 10
+  DESIRED_BUFFER: 0.0           # metres
+  LOWER_ALTITUDE_LIMIT: 2.0    # metres
+  move_threshold_vertical: 1.0
+  move_threshold_horizontal: 1.0
 
 control:
   max_velocity: 1.35
-  nominal_velocity: 0.75
-  Kp: 1.7
+  nominal_velocity: 0.5
+  NOMINAL_Z: -0.4
+  Kp: 1.7/10
   Kd: 0.4
   Ki: 0
+

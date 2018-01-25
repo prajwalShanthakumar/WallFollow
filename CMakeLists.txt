@@ -197,6 +197,14 @@ add_executable(${PROJECT_NAME}_nominal_velocity src/nominal_velocity.cpp)
 target_link_libraries(${PROJECT_NAME}_nominal_velocity ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_nominal_velocity ${catkin_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_discover_follow_wall src/discover_follow_wall.cpp)
+target_link_libraries(${PROJECT_NAME}_discover_follow_wall ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_discover_follow_wall ${catkin_LIBRARIES})
+
+add_executable(${PROJECT_NAME}_offboard_position_test src/offboard_position_test.cpp)
+target_link_libraries(${PROJECT_NAME}_offboard_position_test ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_offboard_position_test ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##

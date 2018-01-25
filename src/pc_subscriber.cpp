@@ -25,9 +25,9 @@ float y;
 };
 
 const float xmin = 0.5;		
-const float xmax = 7;
+const float xmax = 10;
 const float ymin = 0.5;
-const float ymax = 7;
+const float ymax = 10;
 
 const int theta_max = 360;			//# degrees
 const int r_max = 200;				// rmax = rlim/resolution
