@@ -2,35 +2,40 @@ sensing_range:
   min: 0.5 # currently hardcoded in code
   max: 15 # currently hardcoded in code
   resolution: 0.1 # currently hardcoded in code
-  laser_rf_offset: 180
+  laser_rf_offset: 90
 
 # lidar leads robot x axis (east) by 90 degrees in simulation and 180 degrees on the actual quad
 # verify and make sure that both are anticlockwise
 
 line_region:
-  theta_min: -90
-  theta_max: 90
-  threshold: 4
+  theta_min: -40
+  theta_max: 40
+  threshold: 5
   min_line_separation_dist: 2 # currently unused
   min_line_separation_angle: 45 # currently unused
 
 flight:
-  desired_wall_dist: 6.5
+  desired_wall_dist: 5
   desired_altitude: 4           # overwritten in code when wall found
   altitude_entry_tolerance: 0.2 # currently unused
   altitude_exit_tolerance: 1    # currently unused
   NO_WALL_THRESHOLD: 5          # no of LIDAR scans without wall that can be tolerated before we switch to discover wall (potentially problematic)
   DESIRED_MOVE_seconds: 7
-  DESIRED_BUFFER: 2.0           # metres
+  DESIRED_BUFFER: 3.0           # metres
   LOWER_ALTITUDE_LIMIT: 1.0    # metres
+  UPPER_ALTITUDE_LIMIT: 10
   move_threshold_vertical: 0.7
   move_threshold_horizontal: 1.0
 
 control:
   max_velocity: 1.0
-  nominal_velocity: 0.4
-  NOMINAL_Z: -0.4
-  Kp: 1.7
+  max_Z_velocity: 1.0
+  nominal_velocity: 0.5
+  NOMINAL_Z: 0.5
+  Kp: 1.5
   Kd: 0.4
   Ki: 0
+  Z_Kp: 1.5
+  Z_Kd: 0.4
+  Z_Ki: 0
 
