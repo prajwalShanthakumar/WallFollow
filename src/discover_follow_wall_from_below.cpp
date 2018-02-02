@@ -63,6 +63,9 @@ float Z_Kd = 0.4;
 float Z_Ki = 0;
 float max_Z_velocity = 1.0;
 
+float TAKEOFF_VEL = 1.3;
+float OFF_THE_GROUND_ALT = 1.5;
+
 geometry_msgs::PoseStamped local_pose;
 mavros_msgs::State current_state;
 wall_follow::Lines hough_lines;
@@ -212,7 +215,10 @@ mavros_msgs::PositionTarget computeTargetVel(){
 			else{							// look for bridge
 				target_vel.velocity.x = 0;
 				target_vel.velocity.y = 0;
-				target_vel.velocity.z = NOMINAL_Z;
+				if(local_pose.pose.position.z > OFF_THE_GROUND_ALT)
+					target_vel.velocity.z = NOMINAL_Z;
+				else
+					target_vel.velocity.z = TAKEOFF_VEL;
 			}	
 		}
 
