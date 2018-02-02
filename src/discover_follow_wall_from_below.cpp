@@ -44,6 +44,7 @@ int move_iters = 0;
 int no_wall_count = 0;
 
 bool new_data = 0;
+bool first_iter = 1;
 
 float hold_error;// = 1000;		// initialize to very large number so that start off in "stay" rather than "move". Not a problem if sweep data appears before flight
 float hold_velocity;
@@ -64,7 +65,8 @@ float Z_Ki = 0;
 float max_Z_velocity = 1.0;
 
 float TAKEOFF_VEL = 1.3;
-float OFF_THE_GROUND_ALT = 1.5;
+float TAKEOFF_BUFFER = 1.5;
+float INITIAL_ALTITUDE = 0;
 
 geometry_msgs::PoseStamped local_pose;
 mavros_msgs::State current_state;
@@ -213,12 +215,20 @@ mavros_msgs::PositionTarget computeTargetVel(){
 				mode = SETTLE_IN;
 			}
 			else{							// look for bridge
+				
+				if(first_iter){
+					INITIAL_ALTITUDE = local_pose.pose.position.z;
+					first_iter = 0;
+				}
+					
+				if(local_pose.pose.position.z > INITIAL_ALTITUDE + TAKEOFF_BUFFER){
+					target_vel.velocity.z = NOMINAL_Z;
+				}
+				else{
+					target_vel.velocity.z = TAKEOFF_VEL;
+				}
 				target_vel.velocity.x = 0;
 				target_vel.velocity.y = 0;
-				if(local_pose.pose.position.z > OFF_THE_GROUND_ALT)
-					target_vel.velocity.z = NOMINAL_Z;
-				else
-					target_vel.velocity.z = TAKEOFF_VEL;
 			}	
 		}
 
@@ -327,6 +337,7 @@ void getAllParams(ros::NodeHandle n){
 	n.getParam("/control/max_Z_velocity",max_Z_velocity);
 	n.getParam("/control/nominal_velocity",nominal_velocity);
 	n.getParam("/control/NOMINAL_Z", NOMINAL_Z);
+	n.getParam("/control/TAKEOFF_VEL", TAKEOFF_VEL);
 
 	n.getParam("/line_region/threshold",CONFIDENCE_THRESHOLD);
 
@@ -338,6 +349,7 @@ void getAllParams(ros::NodeHandle n){
 	n.getParam("/flight/DESIRED_MOVE_SECONDS", DESIRED_MOVE_SECONDS);
 	n.getParam("/flight/DESIRED_BUFFER", DESIRED_BUFFER);
 	n.getParam("/flight/UPPER_ALTITUDE_LIMIT", UPPER_ALTITUDE_LIMIT);
+	n.getParam("/flight/TAKEOFF_BUFFER", TAKEOFF_BUFFER);
 	
 	n.getParam("/flight/move_threshold_vertical", move_threshold_vertical);
 	n.getParam("/flight/move_threshold_horizontal", move_threshold_horizontal);

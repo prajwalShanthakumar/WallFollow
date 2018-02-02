@@ -26,12 +26,14 @@ flight:
   UPPER_ALTITUDE_LIMIT: 10
   move_threshold_vertical: 0.7
   move_threshold_horizontal: 1.0
+  TAKEOFF_BUFFER: 1.0
 
 control:
   max_velocity: 1.0
   max_Z_velocity: 1.0
   nominal_velocity: 0.5
   NOMINAL_Z: 0.5
+  TAKEOFF_VEL: 1.0 
   Kp: 1.5
   Kd: 0.4
   Ki: 0
