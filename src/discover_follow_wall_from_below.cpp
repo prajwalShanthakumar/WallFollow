@@ -68,6 +68,8 @@ float TAKEOFF_VEL = 1.3;
 float TAKEOFF_BUFFER = 1.5;
 float INITIAL_ALTITUDE = 0;
 
+float ORIG_NOMINAL_VEL = 0;
+
 geometry_msgs::PoseStamped local_pose;
 mavros_msgs::State current_state;
 wall_follow::Lines hough_lines;
@@ -209,6 +211,8 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	// STATE MACHINE
 
  	if(mode == DISCOVER_WALL){
+		nominal_velocity = ORIG_NOMINAL_VEL;
+		move_iters = 0;
 		if(local_pose.pose.position.z < UPPER_ALTITUDE_LIMIT ){		// safe altitude
 			if(hough_lines.confidence[0] > CONFIDENCE_THRESHOLD){	// bridge found
 				desired_altitude = local_pose.pose.position.z + DESIRED_BUFFER;
@@ -248,14 +252,28 @@ mavros_msgs::PositionTarget computeTargetVel(){
 
 		target_vel.velocity.x = hold_vel.vel_x;
 		target_vel.velocity.y = hold_vel.vel_y;
-		target_vel.velocity.z = altitude_vel;
+		//target_vel.velocity.z = altitude_vel;
+		target_vel.velocity.z = 0;
 
-		if(no_wall_count > NO_WALL_THRESHOLD){
+		if(no_wall_count > NO_WALL_THRESHOLD){ // wall really lost
 			mode = DISCOVER_WALL;
+			no_wall_count = 0;		
 		}
 
-		else if( (fabs(hold_error) < move_threshold_horizontal) && (fabs(altitude_error) < move_threshold_vertical) ){
-			mode = NOMINAL_VELOCITY;
+		else if (hough_lines.confidence[0] > CONFIDENCE_THRESHOLD){ 
+			if(fabs(hold_error) < move_threshold_horizontal){ // && (fabs(altitude_error) < move_threshold_vertical) ){			
+				mode = NOMINAL_VELOCITY;
+			}
+			else{
+				mode = SETTLE_IN;
+			}
+			
+		}
+		else{					// wall temporarily lost
+			mode = SETTLE_IN;
+			target_vel.velocity.x = 0;
+			target_vel.velocity.y = 0;
+			target_vel.velocity.z = 0;
 		}
 		
 	}
@@ -267,7 +285,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 		}
 
 		if(move_iters == DESIRED_MOVE_iters){	// change direction
-			nominal_velocity = nominal_velocity * -1;
+			nominal_velocity = ORIG_NOMINAL_VEL * -1;
 		}
 
 		if(move_iters >= DESIRED_MOVE_iters * 2){	// stop
@@ -283,15 +301,30 @@ mavros_msgs::PositionTarget computeTargetVel(){
 
 		target_vel.velocity.x = hold_vel.vel_x + move_vel.vel_x;
 		target_vel.velocity.y = hold_vel.vel_y + move_vel.vel_y;
-		target_vel.velocity.z = altitude_vel;
+		//target_vel.velocity.z = altitude_vel;
+		target_vel.velocity.z = 0;
 
-		if(no_wall_count > NO_WALL_THRESHOLD){
+		if(no_wall_count > NO_WALL_THRESHOLD){	// wall really lost
 			mode = DISCOVER_WALL;
+			no_wall_count = 0;
 		}
-
-		else if( (fabs(hold_error) > move_threshold_horizontal) || (fabs(altitude_error) > move_threshold_vertical) ){
+		
+		else if (hough_lines.confidence[0] > CONFIDENCE_THRESHOLD){ 
+			if(fabs(hold_error) < move_threshold_horizontal){ // && (fabs(altitude_error) < move_threshold_vertical) ){			
+				mode = NOMINAL_VELOCITY;
+			}
+			else{
+				mode = SETTLE_IN;
+			}
+			
+		}
+		else{					// wall temporarily lost
 			mode = SETTLE_IN;
+			target_vel.velocity.x = 0;
+			target_vel.velocity.y = 0;
+			target_vel.velocity.z = 0;
 		}
+		
 	}
 
 	/*else if(mode == REFIND_WALL){
@@ -335,7 +368,7 @@ void getAllParams(ros::NodeHandle n){
 	
 	n.getParam("/control/max_velocity",max_velocity);
 	n.getParam("/control/max_Z_velocity",max_Z_velocity);
-	n.getParam("/control/nominal_velocity",nominal_velocity);
+	n.getParam("/control/nominal_velocity",ORIG_NOMINAL_VEL);
 	n.getParam("/control/NOMINAL_Z", NOMINAL_Z);
 	n.getParam("/control/TAKEOFF_VEL", TAKEOFF_VEL);
 
@@ -364,7 +397,7 @@ void getAllParams(ros::NodeHandle n){
 
 	ROS_INFO("max_velocity: %f",max_velocity);
 	ROS_INFO("max_Z_velocity: %f",max_Z_velocity);
-	ROS_INFO("nominal_velocity: %f",nominal_velocity);
+	ROS_INFO("nominal_velocity: %f",ORIG_NOMINAL_VEL);
 	ROS_INFO("NOMINAL_Z: %f", NOMINAL_Z);
 
 	ROS_INFO("line threshold: %d", CONFIDENCE_THRESHOLD);
@@ -380,6 +413,7 @@ void getAllParams(ros::NodeHandle n){
 	ROS_INFO("move_threshold_vertical: %f", move_threshold_vertical);
 
 	DESIRED_MOVE_iters = DESIRED_MOVE_SECONDS * 20; // desired num of seconds * velocity publishing rate
+	nominal_velocity = ORIG_NOMINAL_VEL;
 }
 
 

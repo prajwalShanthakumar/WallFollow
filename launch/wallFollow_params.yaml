@@ -20,7 +20,7 @@ flight:
   altitude_entry_tolerance: 0.2 # currently unused
   altitude_exit_tolerance: 1    # currently unused
   NO_WALL_THRESHOLD: 5          # no of LIDAR scans without wall that can be tolerated before we switch to discover wall (potentially problematic)
-  DESIRED_MOVE_seconds: 7
+  DESIRED_MOVE_SECONDS: 4
   DESIRED_BUFFER: 3.0           # metres
   LOWER_ALTITUDE_LIMIT: 1.0    # metres
   UPPER_ALTITUDE_LIMIT: 10
@@ -30,10 +30,10 @@ flight:
 
 control:
   max_velocity: 1.0
-  max_Z_velocity: 1.0
+  max_Z_velocity: 0.5
   nominal_velocity: 0.5
   NOMINAL_Z: 0.5
-  TAKEOFF_VEL: 1.0 
+  TAKEOFF_VEL: 0.5 
   Kp: 1.5
   Kd: 0.4
   Ki: 0
