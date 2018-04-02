@@ -142,6 +142,7 @@ Line find_best_line_and_remove(){
 	// throwing away all other similar lines; angle within 30 degrees of best AND distance within 1m of best
 
 	
+
 	for(int theta = acc_max_theta - min_line_sep_angle; theta < acc_max_theta + min_line_sep_angle; theta++){		
 		int temp_theta = theta;
 		
@@ -172,7 +173,7 @@ void hough_transform(){
 	compute_r_theta();
 	
 	visualization_msgs::Marker points;
-	points.header.frame_id = "/laser_frame";
+	points.header.frame_id = "/local_origin";
 	points.header.stamp = ros::Time::now();
 	points.ns = "points_and_lines";
 	points.pose.orientation.w = 1.0;
@@ -184,7 +185,7 @@ void hough_transform(){
     points.color.a = 1.0;
 
 	visualization_msgs::Marker line_list;
-	line_list.header.frame_id = "/laser_frame";
+	line_list.header.frame_id = "/local_origin";
 	line_list.header.stamp = ros::Time::now();
 	line_list.ns = "points_and_lines";
 	line_list.action = visualization_msgs::Marker::ADD;
@@ -219,14 +220,84 @@ void hough_transform(){
 		p.z = 0;
 		points.points.push_back(p);
 	
-		p1.x = p.x + 10 * cos( (line1.angle + 90) * M_PI / 180.0);
-		p1.y = p.y + 10 * sin( (line1.angle + 90) * M_PI / 180.0);
+		int num_points = 0;
+		float xmax = -20;
+		float xmin = 20;
+		float ymax = -20;
+		float ymin = 20;
+		for(int j = 0; j < valid_indices.size(); j++){		// iterate over all valid points; find the end points of the line	
+				float r =   (cloud[valid_indices[j]].x * cos(line1.angle*M_PI/180.0) + cloud[valid_indices[j]].y * sin(line1.angle*M_PI/180.0));
+				if(r > 0 && ( fabs(r - line1.dist) < resolution ) ){
+					num_points++;
+					if( cloud[valid_indices[j]].x > xmax )
+						xmax = cloud[valid_indices[j]].x;
+					if( cloud[valid_indices[j]].x < xmin )
+						xmin = cloud[valid_indices[j]].x;
+					if( cloud[valid_indices[j]].y > ymax )
+						ymax = cloud[valid_indices[j]].y;
+					if( cloud[valid_indices[j]].y < ymin )
+						ymin = cloud[valid_indices[j]].y;	
+				}
+				
+
+				/*
+				int slope_angle = atan2( (p.y - cloud[valid_indices[i]].y) , (p.x - cloud[valid_indices[i]].x)) * 180 / M_PI;
+				int des_angle = line1.angle + 90;
+				if(slope_angle < 0)
+					slope_angle = 180 + slope_angle;
+				
+				if(des_angle >= 360){
+					des_angle = des_angle - 360;		
+				}
+
+				if(des_angle >= 180){
+					des_angle = des_angle - 180;
+				}
+				
+
+				if(abs(slope_angle - des_angle) <= 10){
+					num_points++;	
+				}
+				ROS_INFO("des_angle %d", des_angle);
+				ROS_INFO("slope_angle %d", slope_angle);
+				ROS_INFO("des_angle - slope_angle = %d", des_angle - slope_angle);*/
+				
+		}
+		if(line1.angle >= 180) line1.angle = line1.angle - 180;		// tan(180 + theta) = tan(theta)
+
+		if(line1.angle == 0){		// perpendicular to line at 0 degrees. The line itself is parallel to Y axis
+			ROS_INFO("Points are (%.2f, %.2f) and (%.2f, %.2f)", line1.dist, ymin, line1.dist, ymax);
+			p1.x = line1.dist; p1.y = ymin; p2.x = line1.dist; p2.y = ymax;
+		}
+		else if(line1.angle == 90){
+			ROS_INFO("Points are (%.2f, %.2f) and (%.2f, %.2f)", xmin, line1.dist, xmax, line1.dist);
+			p1.x = xmin; p1.y = line1.dist; p2.x = xmax; p2.y = line1.dist;
+		}
+		else if(line1.angle < 90){	// perpendicular to line less than 90. Line itself greater than 90 (-ve slope) 
+			ROS_INFO("Points are (%.2f, %.2f) and (%.2f, %.2f)", xmin, ymax, xmax, ymin);
+			p1.x = xmin; p1.y = ymax; p2.x = xmax; p2.y = ymin;
+		}
+		else{				// line1.angle > 90
+			ROS_INFO("Points are (%.2f, %.2f) and (%.2f, %.2f)", xmin, ymin, xmax, ymax);
+			p1.x = xmin; p1.y = ymin; p2.x = xmax; p2.y = ymax;
+		}
+		ROS_INFO("num_points = %d",num_points);
+
+		//p1.x = p.x + 10 * cos( (line1.angle + 90) * M_PI / 180.0);
+		//p1.y = p.y + 10 * sin( (line1.angle + 90) * M_PI / 180.0);
 		p1.z = 0;
-		p2.x = p.x - 10 * cos( (line1.angle + 90) * M_PI / 180.0);
-		p2.y = p.y - 10 * sin( (line1.angle + 90) * M_PI / 180.0);
+		//p2.x = p.x - 10 * cos( (line1.angle + 90) * M_PI / 180.0);
+		//p2.y = p.y - 10 * sin( (line1.angle + 90) * M_PI / 180.0);
 		p2.z = 0;
 		line_list.points.push_back(p1);
 		line_list.points.push_back(p2);
+
+		my_lines.x1[i] = p1.x;
+		my_lines.x2[i] = p2.x;
+		my_lines.y1[i] = p1.y;
+		my_lines.y2[i] = p2.y;
+
+		
 	}
 
 	marker_pub.publish(points);

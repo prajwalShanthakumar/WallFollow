@@ -8,8 +8,8 @@ sensing_range:
 # verify and make sure that both are anticlockwise
 
 line_region:
-  theta_min: -40
-  theta_max: 40
+  theta_min: -90
+  theta_max: 90
   threshold: 5
   min_line_separation_dist: 2 # currently unused
   min_line_separation_angle: 45 # currently unused
@@ -31,7 +31,7 @@ flight:
 control:
   max_velocity: 1.0
   max_Z_velocity: 0.5
-  nominal_velocity: 0.5
+  nominal_velocity: 0
   NOMINAL_Z: 0.5
   TAKEOFF_VEL: 0.5 
   Kp: 1.5

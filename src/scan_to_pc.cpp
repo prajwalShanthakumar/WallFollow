@@ -14,8 +14,8 @@ void scan_Callback(const sensor_msgs::LaserScan::ConstPtr& in_scan){
 int main(int argc, char **argv){
 	ros::init(argc, argv, "scan_to_pc");
 	ros::NodeHandle n;
-	ros::Subscriber scan_sub = n.subscribe("/laser/scan", 10, scan_Callback);
-	ros::Publisher cloud_pub = n.advertise<sensor_msgs::PointCloud2>("/pc2",10);
+	ros::Subscriber scan_sub = n.subscribe("laser/scan", 10, scan_Callback);
+	ros::Publisher cloud_pub = n.advertise<sensor_msgs::PointCloud2>("pc2",10);
 	ros::Rate rate(1.0);
 	while(ros::ok()){
 		ros::spinOnce();

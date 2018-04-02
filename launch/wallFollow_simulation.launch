@@ -3,6 +3,7 @@
 	<!--param name="control/max_velocity"	type="double"	value="2.0"/-->
 	
 	<include file="$(find px4)/launch/mavros_posix_sitl.launch"/>
-	<node pkg="wall_follow" type="wall_follow_scan_to_pc" name="scan_to_pc"/>
+	<node pkg="wall_follow" type="wall_follow_scan_to_pc" name="scan_to_pc" ns="hor"/>
+	<node pkg="wall_follow" type="wall_follow_scan_to_pc" name="scan_to_pc" ns="vert"/>
 	<include file="$(find wall_follow)/launch/wallFollow.launch"/>
 </launch>
