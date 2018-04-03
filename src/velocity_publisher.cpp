@@ -13,12 +13,15 @@
 enum Mode {follow_wall, recover_altitude};
 Mode current_mode = recover_altitude;
 
+enum Prev{Initial,Below,Above};
+Prev prev = Initial;
+
 const float desired_wall_dist = 5.0;
 const float desired_altitude = 5.0;
 
 const float altitude_entry_tolerance = 0.2;	
 const float altitude_exit_tolerance = 1;	
-const float confidence_threshold = 10;
+const float confidence_threshold = 5;
 
 const int laser_rf_offset = 90;		// lidar (Sweep) leads robot x axis (east) by 90 degrees in simulation and 180 degrees on the actual quad
 						// verify and make sure that both are anticlockwise
@@ -35,11 +38,11 @@ float y_rf_hold;
 float x_rf_move;
 float y_rf_move;
 
-const float Kp = 1;				// PID parameters
-const float Kd = 0.15;
-const float Ki = 0;
+const float Kp = 0.5;				// PID parameters	// 1.0
+const float Kd = 0.08;							// 0.15
+const float Ki = 0.0;
 float max_velocity = 0.5;
-float nominal_velocity = 0;
+float nominal_velocity = 0.3;
 
 geometry_msgs::PoseStamped local_pose;		
 mavros_msgs::State current_state;
@@ -239,19 +242,29 @@ mavros_msgs::PositionTarget computeTargetVel(){
 
 	if(new_vert_data){
 		if(vert_lines.confidence[0] > confidence_threshold){
-			altitude_error = (vert_lines.y1[0] + 0.5);
+			float z_offset_from_desired = max(vert_lines.y1[0], vert_lines.y2[0]) - 1.5; // desired altitude is 1m below top of surface
+			altitude_error = z_offset_from_desired;
 			altitude_velocity = PID(altitude_error,prev_altitude_errors);
 		}
 		else{
+			altitude_error = 0;
 			altitude_velocity = 0;
 		}
 		new_vert_data = 0;
 	}
 	
-	target_vel.velocity.x = x_rf_hold + x_rf_move;
-	target_vel.velocity.y = y_rf_hold + y_rf_move;
-	target_vel.velocity.z = altitude_velocity;
+	if(fabs(altitude_error) < 1.0 && fabs(hold_error) < 1.0){
+		target_vel.velocity.x = x_rf_hold + x_rf_move;
+		target_vel.velocity.y = y_rf_hold + y_rf_move;
+	}
+	else{
+		target_vel.velocity.x = x_rf_hold;
+		target_vel.velocity.y = y_rf_hold;
+	}
 
+	target_vel.velocity.z = altitude_velocity;
+	ROS_INFO("altitude_error %f",altitude_error);
+	ROS_INFO("dist_error %f", hold_error);
 	ROS_INFO("target vel x = %f,  y = %f,  z = %f", target_vel.velocity.x, target_vel.velocity.y, target_vel.velocity.z);
 	return target_vel;
 }
