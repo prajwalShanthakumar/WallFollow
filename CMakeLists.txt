@@ -177,17 +177,17 @@ add_executable(${PROJECT_NAME}_scan_to_pc src/scan_to_pc.cpp)
 target_link_libraries(${PROJECT_NAME}_scan_to_pc ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_scan_to_pc ${catkin_LIBRARIES})
 
-add_executable(${PROJECT_NAME}_offb_node src/offb_node.cpp)
-target_link_libraries(${PROJECT_NAME}_offb_node ${catkin_LIBRARIES})
-add_dependencies(${PROJECT_NAME}_offb_node ${catkin_LIBRARIES})
+#add_executable(${PROJECT_NAME}_offb_node src/offb_node.cpp)
+#target_link_libraries(${PROJECT_NAME}_offb_node ${catkin_LIBRARIES})
+#add_dependencies(${PROJECT_NAME}_offb_node ${catkin_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_offboard_velocity_test src/offboard_velocity_test.cpp)
 target_link_libraries(${PROJECT_NAME}_offboard_velocity_test ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_offboard_velocity_test ${catkin_LIBRARIES})
 
-add_executable(${PROJECT_NAME}_offboard_altitude_hold src/offboard_altitude_hold.cpp)
-target_link_libraries(${PROJECT_NAME}_offboard_altitude_hold ${catkin_LIBRARIES})
-add_dependencies(${PROJECT_NAME}_offboard_altitude_hold ${catkin_LIBRARIES})
+#add_executable(${PROJECT_NAME}_offboard_altitude_hold src/offboard_altitude_hold.cpp)
+#target_link_libraries(${PROJECT_NAME}_offboard_altitude_hold ${catkin_LIBRARIES})
+#add_dependencies(${PROJECT_NAME}_offboard_altitude_hold ${catkin_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_maintain_distance src/maintain_distance.cpp)
 target_link_libraries(${PROJECT_NAME}_maintain_distance ${catkin_LIBRARIES})
@@ -201,9 +201,9 @@ add_executable(${PROJECT_NAME}_discover_follow_wall src/discover_follow_wall.cpp
 target_link_libraries(${PROJECT_NAME}_discover_follow_wall ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_discover_follow_wall ${catkin_LIBRARIES})
 
-add_executable(${PROJECT_NAME}_discover_follow_wall_from_below src/discover_follow_wall_from_below.cpp)
-target_link_libraries(${PROJECT_NAME}_discover_follow_wall_from_below ${catkin_LIBRARIES})
-add_dependencies(${PROJECT_NAME}_discover_follow_wall_from_below ${catkin_LIBRARIES})
+#add_executable(${PROJECT_NAME}_discover_follow_wall_from_below src/discover_follow_wall_from_below.cpp)
+#target_link_libraries(${PROJECT_NAME}_discover_follow_wall_from_below ${catkin_LIBRARIES})
+#add_dependencies(${PROJECT_NAME}_discover_follow_wall_from_below ${catkin_LIBRARIES})
 
 add_executable(${PROJECT_NAME}_offboard_position_test src/offboard_position_test.cpp)
 target_link_libraries(${PROJECT_NAME}_offboard_position_test ${catkin_LIBRARIES})

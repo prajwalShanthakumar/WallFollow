@@ -1,18 +1,44 @@
-sensing_range:
-  min: 0.5 # currently hardcoded in code
-  max: 15 # currently hardcoded in code
-  resolution: 0.1 # currently hardcoded in code
-  laser_rf_offset: 90
+hor:
+  sensing:
+    xmin: 0.8
+    xmax: 15
+    ymin: 0.8
+    ymax: 15
+  line:
+    theta_min: -90 # specify -180 to +180	w.r.t laser frame
+    theta_max: 90
+    resolution: 0.1 # currently hardcoded in code
+    threshold: 5
+    min_line_separation_dist: 2 # (metres)
+    min_line_separation_angle: 45 # (degrees)
 
-# lidar leads robot x axis (east) by 90 degrees in simulation and 180 degrees on the actual quad
-# verify and make sure that both are anticlockwise
+vert:
+  sensing:
+    xmin: 0.8 # X-axis is the interesting vertical axis (Z) in the real world
+    xmax: 15 
+    ymin: 0.8 # Y-axis is the distance to the bridge (to the left)
+    ymax: 15
+  line:
+    theta_min: 45 # specify -180 to +180	w.r.t laser frame
+    theta_max: 135
+    resolution: 0.1 
+    threshold: 5
+    min_line_separation_dist: 2 #  (metres)
+    min_line_separation_angle: 45 #  (degrees)
 
-line_region:
-  theta_min: -90
-  theta_max: 90
-  threshold: 5
-  min_line_separation_dist: 2 # currently unused
-  min_line_separation_angle: 45 # currently unused
+control:
+  laser_rf_offset: 90 # horizontal lidar leads robot x axis (east) by 90 degrees in simulation and 0 degrees on the actual hex
+  max_velocity: 1.0
+  max_Z_velocity: 0.5
+  nominal_velocity: 0
+  NOMINAL_Z: 0.5
+  TAKEOFF_VEL: 0.5 
+  Kp: 1.5
+  Kd: 0.4
+  Ki: 0
+  Z_Kp: 1.5
+  Z_Kd: 0.4
+  Z_Ki: 0
 
 flight:
   desired_wall_dist: 5
@@ -28,16 +54,6 @@ flight:
   move_threshold_horizontal: 1.0
   TAKEOFF_BUFFER: 1.0
 
-control:
-  max_velocity: 1.0
-  max_Z_velocity: 0.5
-  nominal_velocity: 0
-  NOMINAL_Z: 0.5
-  TAKEOFF_VEL: 0.5 
-  Kp: 1.5
-  Kd: 0.4
-  Ki: 0
-  Z_Kp: 1.5
-  Z_Kd: 0.4
-  Z_Ki: 0
+
+
 

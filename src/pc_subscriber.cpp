@@ -10,6 +10,8 @@
 //#include <transform_datatypes.h>
 using namespace std;
 
+//------------------------------------------------------------------------------------------------- Structures
+
 struct Line{
 int confidence;			// number of inliers from the filtered cloud
 float dist;				// value in metres
@@ -24,31 +26,35 @@ float x;
 float y;
 };
 
-const float xmin = 0.5;		
-const float xmax = 10;
-const float ymin = 0.5;
-const float ymax = 10;
+//------------------------------------------------------------------------------------------------- Parameters
 
-const int theta_max = 360;			//# degrees
-const int r_max = 200;				// rmax = rlim/resolution
 
-const int r_lim = 10;				//# metres
-const float resolution = 0.1;			//# metres
+float xmin = 0.5;		// for preprocess cloud		
+float xmax = 10;
+float ymin = 0.5;
+float ymax = 10;
+				// for line extraction
+int theta_max = 360;			//# degrees
+int r_lim = 15;				//# metres
+float resolution = 0.1;			//# metres
+int r_max = 150;			// rmax = rlim/resolution
 
-const int min_line_sep_dist = 2; 		//# metres
-const int min_line_sep_angle = 45;		//# degrees
-
-int threshold;
 int lr_theta_min;
 int lr_theta_max;
+int threshold;
+int min_line_sep_dist = 2; 		//# metres
+int min_line_sep_angle = 45;		//# degrees
 
+//------------------------------------------------------------------------------------------------- Global variables
 //tf::getYaw
 
 ros::Publisher marker_pub;
 ros::Publisher lines_pub;
 pcl::PointCloud<pcl::PointXYZ>& cloud = *(new pcl::PointCloud<pcl::PointXYZ>());
 std::vector<int> valid_indices(500);
-int accumulator[theta_max][r_max];
+int accumulator[360][2000];
+
+//------------------------------------------------------------------------------------------------- Functions
 
 XY r_theta_to_XY(float r, float theta){
 	XY xy;
@@ -218,7 +224,7 @@ void hough_transform(){
 		p.x = r_theta_to_XY(line1.dist,line1.angle).x;
 		p.y = r_theta_to_XY(line1.dist,line1.angle).y;
 		p.z = 0;
-		points.points.push_back(p);
+		//points.points.push_back(p);
 	
 		int num_points = 0;
 		float xmax = -20;
@@ -239,39 +245,17 @@ void hough_transform(){
 						ymin = cloud[valid_indices[j]].y;	
 				}
 				
-
-				/*
-				int slope_angle = atan2( (p.y - cloud[valid_indices[i]].y) , (p.x - cloud[valid_indices[i]].x)) * 180 / M_PI;
-				int des_angle = line1.angle + 90;
-				if(slope_angle < 0)
-					slope_angle = 180 + slope_angle;
-				
-				if(des_angle >= 360){
-					des_angle = des_angle - 360;		
-				}
-
-				if(des_angle >= 180){
-					des_angle = des_angle - 180;
-				}
-				
-
-				if(abs(slope_angle - des_angle) <= 10){
-					num_points++;	
-				}
-				ROS_INFO("des_angle %d", des_angle);
-				ROS_INFO("slope_angle %d", slope_angle);
-				ROS_INFO("des_angle - slope_angle = %d", des_angle - slope_angle);*/
-				
 		}
+
 		if(line1.angle >= 180) line1.angle = line1.angle - 180;		// tan(180 + theta) = tan(theta)
 
-		if(line1.angle == 0){		// perpendicular to line at 0 degrees. The line itself is parallel to Y axis
-			ROS_INFO("Points are (%.2f, %.2f) and (%.2f, %.2f)", line1.dist, ymin, line1.dist, ymax);
-			p1.x = line1.dist; p1.y = ymin; p2.x = line1.dist; p2.y = ymax;
+		if(line1.angle == 0){		// perpendicular to line from origin is at 0 degrees (X-axis). The line itself is parallel to Y axis
+			ROS_INFO("Points are (%.2f, %.2f) and (%.2f, %.2f)", xmin, ymin, xmin, ymax);// xmin = xmax (ideally) is not equal to line1.dist necessarily!!! (+-)
+			p1.x = xmin; p1.y = ymin; p2.x = xmin; p2.y = ymax;
 		}
 		else if(line1.angle == 90){
 			ROS_INFO("Points are (%.2f, %.2f) and (%.2f, %.2f)", xmin, line1.dist, xmax, line1.dist);
-			p1.x = xmin; p1.y = line1.dist; p2.x = xmax; p2.y = line1.dist;
+			p1.x = xmin; p1.y = ymin; p2.x = xmax; p2.y = ymin;
 		}
 		else if(line1.angle < 90){	// perpendicular to line less than 90. Line itself greater than 90 (-ve slope) 
 			ROS_INFO("Points are (%.2f, %.2f) and (%.2f, %.2f)", xmin, ymax, xmax, ymin);
@@ -292,6 +276,9 @@ void hough_transform(){
 		line_list.points.push_back(p1);
 		line_list.points.push_back(p2);
 
+		points.points.push_back(p1);
+		points.points.push_back(p2);
+
 		my_lines.x1[i] = p1.x;
 		my_lines.x2[i] = p2.x;
 		my_lines.y1[i] = p1.y;
@@ -303,8 +290,6 @@ void hough_transform(){
 	marker_pub.publish(points);
 	marker_pub.publish(line_list);
 	lines_pub.publish(my_lines);
-	
-	
 
 	//Line line2 = find_best_line_and_remove();
 	//Line line3 = find_best_line_and_remove();
@@ -322,14 +307,36 @@ void pc_Callback(const sensor_msgs::PointCloud2::ConstPtr& msg){
 }
 
 void getAllParams(ros::NodeHandle n){
+	
+	n.getParam("sensing/xmin",xmin);
+	n.getParam("sensing/xmax",xmax);
+	n.getParam("sensing/ymin",ymin);
+	n.getParam("sensing/ymax",ymax);
+	
+	n.getParam("line/theta_min",lr_theta_min);
+	n.getParam("line/theta_max",lr_theta_max);
+	n.getParam("line/resolution",resolution);
+	n.getParam("line/threshold",threshold);
+	n.getParam("line/min_line_separation_dist",min_line_sep_dist);
+	n.getParam("line/min_line_separation_angle",min_line_sep_angle);
 
-	//n.getParam("/sensing_range/resolution",resolution);
-	n.getParam("/line_region/theta_min",lr_theta_min);
-	n.getParam("/line_region/theta_max",lr_theta_max);
-	n.getParam("/line_region/threshold",threshold);
+	ROS_INFO("xmin: %f", xmin);
+	ROS_INFO("xmax: %f", xmax);
+	ROS_INFO("ymin: %f", ymin);
+	ROS_INFO("ymax: %f", ymax);
+	
 	ROS_INFO("line region theta min: %d",lr_theta_min);
 	ROS_INFO("line region theta max: %d",lr_theta_max);
+	ROS_INFO("line resolution: %f", resolution);
 	ROS_INFO("line threshold: %d", threshold);
+	ROS_INFO("min_line_sep_dist: %d", min_line_sep_dist);
+	ROS_INFO("min_line_sep_angle: %d", min_line_sep_angle);
+
+	r_max = r_lim/resolution;
+	ROS_INFO("r_lim: %d",r_lim);	
+	ROS_INFO("r_max: %d",r_max);
+	
+	
 }
 
 int main(int argc, char **argv){
