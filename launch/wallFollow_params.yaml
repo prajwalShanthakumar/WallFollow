@@ -27,7 +27,7 @@ vert:
     min_line_separation_angle: 45 #  (degrees)
 
 control:
-  laser_rf_offset: 90 # horizontal lidar leads robot x axis (east) by 90 degrees in simulation and 0 degrees on the actual hex
+  laser_rf_offset: 0 # horizontal lidar leads robot x axis (east) by 0 degrees in simulation and 0 degrees on the actual hex
   max_velocity: 1.0
   max_Z_velocity: 0.5
   nominal_velocity: 0

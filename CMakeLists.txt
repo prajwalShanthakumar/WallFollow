@@ -209,6 +209,10 @@ add_executable(${PROJECT_NAME}_offboard_position_test src/offboard_position_test
 target_link_libraries(${PROJECT_NAME}_offboard_position_test ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_offboard_position_test ${catkin_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_besideWall src/besideWall.cpp)
+target_link_libraries(${PROJECT_NAME}_besideWall ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_besideWall ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##

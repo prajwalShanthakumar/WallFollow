@@ -1,0 +1,6 @@
+<launch>
+	<rosparam command="load" file="$(find wall_follow)/launch/besideWall_params.yaml"/>
+	<node pkg="wall_follow" type="wall_follow_pc_subscriber" name="pc_subscriber" ns="hor"/>
+	<node pkg="wall_follow" type="wall_follow_pc_subscriber" name="pc_subscriber" ns="vert"/>
+	<node pkg="wall_follow" type="wall_follow_besideWall" name="besideWall"/>
+</launch>

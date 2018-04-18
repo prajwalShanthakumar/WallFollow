@@ -1,0 +1,11 @@
+<launch>
+	<!--rosparam command="load" file="$(find wall_follow)/launch/besideWall_params.yaml"/-->
+	<!--param name="control/max_velocity"	type="double"	value="2.0"/-->
+	
+	<include file="$(find px4)/launch/mavros_posix_sitl.launch"/>
+	<node pkg="wall_follow" type="wall_follow_scan_to_pc" name="scan_to_pc" ns="hor">
+		<param name="control/max_velocity"	type="double"	value="2.0"/>
+	</node>
+	<node pkg="wall_follow" type="wall_follow_scan_to_pc" name="scan_to_pc" ns="vert"/>
+	<include file="$(find wall_follow)/launch/besideWall.launch"/>
+</launch>
