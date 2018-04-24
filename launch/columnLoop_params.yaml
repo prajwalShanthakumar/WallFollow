@@ -5,8 +5,10 @@ hor:
     ymin: 0.8
     ymax: 15
   line:
-    theta_min: 45 # specify lower to higher	w.r.t laser frame sim (wall in front): 45 to 135 real (wall to left): 135 to 225
-    theta_max: 135
+    theta_min: 60 # specify lower to higher	w.r.t laser frame sim (wall in front): 45 to 135 real (wall to left): 135 to 225
+    theta_max: 120
+    theta_min2: 240
+    theta_max2: 300
     resolution: 0.1 # currently hardcoded in code
     threshold: 2
     min_line_separation_dist: 2 # (metres)
@@ -14,13 +16,15 @@ hor:
 
 vert:
   sensing:
-    xmin: 0.8 # X-axis is the interesting vertical axis (Z) in the real world
+    xmin: 0.1 # X-axis is the interesting vertical axis (Z) in the real world
     xmax: 15 
-    ymin: 0.8 # Y-axis is the distance to the bridge (to the left)
+    ymin: 0.1 # Y-axis is the distance to the bridge (to the left)
     ymax: 15
   line:
-    theta_min: 60 # specify specify lower to higher	w.r.t laser frame	
-    theta_max: 120
+    theta_min: 150 # specify specify lower to higher	w.r.t laser frame	
+    theta_max: 210
+    theta_min2: -30
+    theta_max2: 30
     resolution: 0.1 
     threshold: 5
     min_line_separation_dist: 2 #  (metres)
@@ -33,7 +37,7 @@ control:
   max_vel_z: 0.5 # max compensation velocity in Z direction
   nominal_vel: 0.5 # nominal velocity independent 	of compensation velocity
 
-  Kp: 0.5
+  Kp: 0.1
   Kd: 0.08
   Ki: 0
   Z_Kp: 0.5
