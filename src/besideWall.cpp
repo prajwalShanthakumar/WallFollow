@@ -37,7 +37,8 @@ float desired_buffer = 1.5;
 float move_threshold_vertical = 0.7;
 float move_threshold_horizontal = 0.7;
 	
-int confidence_threshold = 5;
+int vert_conf_threshold = 5;
+int hor_conf_threshold = 5;
 
 									
 
@@ -135,7 +136,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	// horizontal control:	// maybe increase update rate because yaw updates are coming fast???
 	
 	if(new_hor_data){			// else, keep controlling with old values 	
-		if(hor_lines.confidence[0] > confidence_threshold){
+		if(hor_lines.confidence[0] > hor_conf_threshold){
 			int theta_rf_hold = hor_lines.angle[0] + laser_rf_offset;
 			hold_error = (hor_lines.dist[0] - desired_wall_dist);
 			hold_velocity = computePID(hold_error, prev_hold_errors, h_pid, max_vel_h);
@@ -159,7 +160,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	// altitude control:
 
 	if(new_vert_data){
-		if(vert_lines.confidence[0] > confidence_threshold){
+		if(vert_lines.confidence[0] > vert_conf_threshold){
 			
 			float z_offset_from_desired;
 			if(alt_mode == FromAbove){
@@ -191,16 +192,17 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	// state machine:
 	
 	// horizontal:
-	if(fabs(altitude_error) < move_threshold_vertical && fabs(hold_error) < move_threshold_horizontal && vert_lines.confidence[0] > confidence_threshold && hor_lines.confidence[0] > confidence_threshold){
+	//if(fabs(altitude_error) < move_threshold_vertical && fabs(hold_error) < move_threshold_horizontal && vert_lines.confidence[0] > vert_conf_threshold && hor_lines.confidence[0] > hor_conf_threshold){
+	if(vert_lines.confidence[0] > vert_conf_threshold && hor_lines.confidence[0] > hor_conf_threshold){
 		target_vel.velocity.x = x_rf_hold + x_rf_move;
 		target_vel.velocity.y = y_rf_hold + y_rf_move;
 	}
 	else{
-		if(hor_lines.confidence[0] > confidence_threshold){
+		if(hor_lines.confidence[0] > hor_conf_threshold){
 			target_vel.velocity.x = x_rf_hold;
 			target_vel.velocity.y = y_rf_hold;
 		}
-		else if(vert_lines.confidence[0] > confidence_threshold){
+		else if(vert_lines.confidence[0] > vert_conf_threshold){
 			target_vel.velocity.x = va_x_rf_hold;
 			target_vel.velocity.y = va_y_rf_hold;
 		}
@@ -211,7 +213,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	}
 
 	// vertical:
-	if(vert_lines.confidence[0] > confidence_threshold){
+	if(vert_lines.confidence[0] > vert_conf_threshold){
 		target_vel.velocity.z = altitude_velocity;
 	}
 	else{
@@ -240,8 +242,8 @@ void getAllParams(ros::NodeHandle n){
 
 	n.getParam("/control/laser_rf_offset",laser_rf_offset);
 
-	n.getParam("/hor/line/threshold",confidence_threshold);
-	n.getParam("/vert/line/threshold",confidence_threshold);
+	n.getParam("/hor/line/threshold",hor_conf_threshold);
+	n.getParam("/vert/line/threshold",vert_conf_threshold);
 
 	n.getParam("/flight/desired_wall_dist", desired_wall_dist);
 	n.getParam("/flight/desired_buffer", desired_buffer);
@@ -262,8 +264,8 @@ void getAllParams(ros::NodeHandle n){
 
 	ROS_INFO("laser_rf_offset: %d",laser_rf_offset);
 	
-	ROS_INFO("hor line threshold: %d", confidence_threshold);
-	ROS_INFO("vert line threshold: %d", confidence_threshold);
+	ROS_INFO("hor line threshold: %d", hor_conf_threshold);
+	ROS_INFO("vert line threshold: %d", vert_conf_threshold);
 
 	ROS_INFO("desired_wall_dist: %f",desired_wall_dist);
 	ROS_INFO("desired_buffer: %f",desired_buffer);

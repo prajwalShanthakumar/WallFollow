@@ -7,7 +7,7 @@ hor:
   line:
     theta_min: 45 # specify lower to higher	w.r.t laser frame sim (wall in front): 45 to 135 real (wall to left): 135 to 225
     theta_max: 135
-    resolution: 0.1 # currently hardcoded in code
+    resolution: 0.2 # currently hardcoded in code
     threshold: 2
     min_line_separation_dist: 2 # (metres)
     min_line_separation_angle: 45 # (degrees)
@@ -21,7 +21,7 @@ vert:
   line:
     theta_min: 60 # specify specify lower to higher	w.r.t laser frame	
     theta_max: 120
-    resolution: 0.1 
+    resolution: 0.2 
     threshold: 5
     min_line_separation_dist: 2 #  (metres)
     min_line_separation_angle: 45 #  (degrees)
@@ -33,15 +33,15 @@ control:
   max_vel_z: 0.5 # max compensation velocity in Z direction
   nominal_vel: 0.5 # nominal velocity independent 	of compensation velocity
 
-  Kp: 0.5
-  Kd: 0.08
+  Kp: 0.4
+  Kd: 0.2
   Ki: 0
-  Z_Kp: 0.5
-  Z_Kd: 0.08
+  Z_Kp: 0.4
+  Z_Kd: 0.2
   Z_Ki: 0
 
 flight:
-  desired_wall_dist: 5.0
+  desired_wall_dist: 4.5
   desired_buffer: 2.0         
   move_threshold_vertical: 0.7
   move_threshold_horizontal: 0.7

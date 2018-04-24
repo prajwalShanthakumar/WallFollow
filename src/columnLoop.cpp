@@ -37,8 +37,9 @@ float desired_buffer = 1.5;
 float move_threshold_vertical = 0.7;
 float move_threshold_horizontal = 0.7;
 	
-int confidence_threshold = 5;
-int clearance_threshold = 2;
+int hor_conf_threshold = 5;
+int vert_conf_threshold = 4;
+float clearance_threshold = 2.0;
 int deck_threshold = 10;
 									
 
@@ -135,9 +136,10 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	// horizontal control:	// maybe increase update rate because yaw updates are coming fast???
 	
 	if(new_hor_data){			// else, keep controlling with old values 	
-		if(hor_lines.confidence[0] > confidence_threshold){
+		if(hor_lines.confidence[0] > hor_conf_threshold){
 			int theta_rf_hold = hor_lines.angle[0] + laser_rf_offset;
 			hold_error = (hor_lines.dist[0] - desired_wall_dist);
+
 			hold_velocity = computePID(hold_error, prev_hold_errors, h_pid, max_vel_h);
 
 			x_rf_hold = hold_velocity * cos (theta_rf_hold * M_PI / 180.0);
@@ -152,8 +154,8 @@ mavros_msgs::PositionTarget computeTargetVel(){
 			int theta_rf_centering = theta_rf_hold - 90;
 			float left_point = hor_lines.x1[0] * cos (theta_rf_centering * M_PI / 180.0) + hor_lines.y1[0] * sin (theta_rf_centering * M_PI / 180.0);
 			float right_point = hor_lines.x2[0] * cos (theta_rf_centering * M_PI / 180.0) + hor_lines.y2[0] * sin (theta_rf_centering * M_PI / 180.0);
-			centering_error = (left_point + right_point) / 2.0;
-			centering_error = (left_point + 4) / 2.0;
+			//centering_error = (left_point + right_point) / 2.0;
+			centering_error = (left_point + desired_buffer)	;
 			centering_velocity = computePID(centering_error, prev_centering_errors, h_pid, max_vel_h);
 
 			x_rf_centering = centering_velocity * cos (theta_rf_centering * M_PI / 180.0);
@@ -184,7 +186,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	// altitude control:
 
 	if(new_vert_data){
-		if((vert_lines.confidence[0] > confidence_threshold) && vert_lines.dist[0] < clearance_threshold){		// if close to ground, move up
+		if((vert_lines.confidence[0] > vert_conf_threshold) && vert_lines.dist[0] < clearance_threshold){		// if close to ground, move up
 
 			alt_mode = Upward;	
 			altitude_velocity = nominal_vel;
@@ -193,7 +195,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 
 
 																// if close to top, move down
-		else if( ((vert_lines.confidence[1] > confidence_threshold) && vert_lines.dist[1] < clearance_threshold) ||  hor_lines.confidence[0] < deck_threshold){
+		else if( ((vert_lines.confidence[1] > vert_conf_threshold) && vert_lines.dist[1] < clearance_threshold) ||  hor_lines.confidence[0] < deck_threshold){
 			alt_mode = Downward;
 			altitude_velocity = -1 * nominal_vel;
 		}
@@ -210,7 +212,7 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	
 	// state machine:
 
-			if(hor_lines.confidence[0] > confidence_threshold){
+			if(hor_lines.confidence[0] > hor_conf_threshold){
 				target_vel.velocity.x = x_rf_hold + x_rf_centering;
 				target_vel.velocity.y = y_rf_hold + y_rf_centering;
 				target_vel.velocity.z = altitude_velocity;
@@ -235,6 +237,7 @@ void getAllParams(ros::NodeHandle n){
 	n.getParam("/control/Kp",h_pid.Kp);
 	n.getParam("/control/Kd",h_pid.Kd);
 	n.getParam("/control/Ki",h_pid.Ki);
+
 	n.getParam("/control/Z_Kp",z_pid.Kp);
 	n.getParam("/control/Z_Kd",z_pid.Kd);
 	n.getParam("/control/Z_Ki",z_pid.Ki);
@@ -245,13 +248,16 @@ void getAllParams(ros::NodeHandle n){
 
 	n.getParam("/control/laser_rf_offset",laser_rf_offset);
 
-	n.getParam("/hor/line/threshold",confidence_threshold);
-	n.getParam("/vert/line/threshold",confidence_threshold);
+	n.getParam("/hor/line/threshold",hor_conf_threshold);
+	n.getParam("/vert/line/threshold",vert_conf_threshold);
 
 	n.getParam("/flight/desired_wall_dist", desired_wall_dist);
 	n.getParam("/flight/desired_buffer", desired_buffer);
 	n.getParam("/flight/move_threshold_vertical", move_threshold_vertical);
 	n.getParam("/flight/move_threshold_horizontal", move_threshold_horizontal);
+
+	n.getParam("/flight/deck_threshold", deck_threshold);
+	n.getParam("/flight/clearance_threshold", clearance_threshold);
 
 
 	ROS_INFO("Kp: %f", h_pid.Kp);
@@ -267,14 +273,16 @@ void getAllParams(ros::NodeHandle n){
 
 	ROS_INFO("laser_rf_offset: %d",laser_rf_offset);
 	
-	ROS_INFO("hor line threshold: %d", confidence_threshold);
-	ROS_INFO("vert line threshold: %d", confidence_threshold);
+	ROS_INFO("hor line threshold: %d", hor_conf_threshold);
+	ROS_INFO("vert line threshold: %d", vert_conf_threshold);
 
 	ROS_INFO("desired_wall_dist: %f",desired_wall_dist);
 	ROS_INFO("desired_buffer: %f",desired_buffer);
 	ROS_INFO("move_threshold_horizontal: %f", move_threshold_horizontal);
 	ROS_INFO("move_threshold_vertical: %f", move_threshold_vertical);
 
+	ROS_INFO("deck threshold: %d", deck_threshold);
+	ROS_INFO("clearance threshold: %f", clearance_threshold);
 }
 
 

@@ -120,7 +120,7 @@ void compute_r_theta(int line_id){
 			else
 				theta = iter_theta;
 
-			int r =   (cloud[valid_indices[i]].x * cos(theta*M_PI/180.0) + cloud[valid_indices[i]].y * sin(theta*M_PI/180.0)) / resolution;	// scale by resolution because we can't index into an array with floats
+			int r =  round( (cloud[valid_indices[i]].x * cos(theta*M_PI/180.0) + cloud[valid_indices[i]].y * sin(theta*M_PI/180.0)) / resolution);	// scale by resolution because we can't index into an array with floats
 
 			if(r > 0)												// only allow positive values of r to eliminate errors because of duplicates (since we are considering 0 to 360)
 				accumulator[theta][r] = accumulator[theta][r] + 1;
@@ -192,7 +192,7 @@ void hough_transform(){
 	points.scale.x = 0.2;
 	points.scale.y = 0.2;
 	points.color.g = 1.0;
-    points.color.a = 1.0;
+    	points.color.a = 1.0;
 
 	visualization_msgs::Marker line_list;
 	line_list.header.frame_id = "/laser_frame";

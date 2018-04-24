@@ -9,7 +9,7 @@ hor:
     theta_max: 120
     theta_min2: 240
     theta_max2: 300
-    resolution: 0.1 # currently hardcoded in code
+    resolution: 0.2 # currently hardcoded in code
     threshold: 2
     min_line_separation_dist: 2 # (metres)
     min_line_separation_angle: 45 # (degrees)
@@ -25,7 +25,7 @@ vert:
     theta_max: 210
     theta_min2: -30
     theta_max2: 30
-    resolution: 0.1 
+    resolution: 0.2 
     threshold: 5
     min_line_separation_dist: 2 #  (metres)
     min_line_separation_angle: 45 #  (degrees)
@@ -37,18 +37,21 @@ control:
   max_vel_z: 0.5 # max compensation velocity in Z direction
   nominal_vel: 0.5 # nominal velocity independent 	of compensation velocity
 
-  Kp: 0.1
-  Kd: 0.08
+  Kp: 0.3
+  Kd: 0.2
   Ki: 0
-  Z_Kp: 0.5
-  Z_Kd: 0.08
+  Z_Kp: 0.3
+  Z_Kd: 0.2
   Z_Ki: 0
 
 flight:
-  desired_wall_dist: 5.0
-  desired_buffer: 2.0         
-  move_threshold_vertical: 0.7
-  move_threshold_horizontal: 0.7
+  desired_wall_dist: 4.5
+  desired_buffer: 4.0         
+  move_threshold_vertical: 0.7 #unused
+  move_threshold_horizontal: 0.7 #unused
+  
+  deck_threshold: 30
+  clearance_threshold: 2.5
 
 
 
