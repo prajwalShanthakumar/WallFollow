@@ -39,11 +39,12 @@ int r_lim = 15;				//# metres
 float resolution = 0.1;			//# metres
 int r_max = 150;			// rmax = rlim/resolution
 
-int lr_theta_min;
-int lr_theta_max;
+int lr_theta_min[2];
+int lr_theta_max[2];
 int threshold;
 int min_line_sep_dist = 2; 		//# metres
 int min_line_sep_angle = 45;		//# degrees
+
 
 //------------------------------------------------------------------------------------------------- Global variables
 //tf::getYaw
@@ -74,7 +75,10 @@ void preprocess_cloud(const sensor_msgs::PointCloud2::ConstPtr& msg){
 	//ROS_INFO("I heard: %d %f %f", i, cloud[i].x, cloud[i].y);
 
 		if(cloud[i].x < xmax && cloud[i].x > xmin && cloud[i].y < ymax && cloud[i].y > ymin){
+			//if(atan2 is between limits)
 			valid_indices.push_back(i);
+			
+
 		}
 
 		else if(cloud[i].x < -1*xmin && cloud[i].x > -1*xmax && cloud[i].y < -1*ymin && cloud[i].y > -1*ymax){
@@ -106,17 +110,17 @@ void clear_accumulator(){
 		}
 	}
 }
-void compute_r_theta(){
+void compute_r_theta(int line_id){
 
 	for(int i = 0; i < valid_indices.size(); i++){		
-		for(int iter_theta = lr_theta_min; iter_theta < lr_theta_max; iter_theta++){
+		for(int iter_theta = lr_theta_min[line_id]; iter_theta < lr_theta_max[line_id]; iter_theta++){
 			int theta;
 			if(iter_theta < 0)				// using theta = 0-360, so avoid negative values
 				theta = 360 + iter_theta;		// eg.: -10 transforms to 360 + (-10) = 350; -10 and 350 are the same thing...
 			else
 				theta = iter_theta;
 
-			int r =   (cloud[valid_indices[i]].x * cos(theta*M_PI/180.0) + cloud[valid_indices[i]].y * sin(theta*M_PI/180.0)) / resolution;	// scale by resolution because we can't index into an array with floats
+			int r =  round( (cloud[valid_indices[i]].x * cos(theta*M_PI/180.0) + cloud[valid_indices[i]].y * sin(theta*M_PI/180.0)) / resolution);	// scale by resolution because we can't index into an array with floats
 
 			if(r > 0)												// only allow positive values of r to eliminate errors because of duplicates (since we are considering 0 to 360)
 				accumulator[theta][r] = accumulator[theta][r] + 1;
@@ -175,11 +179,11 @@ Line find_best_line_and_remove(){
 }
 
 void hough_transform(){
-	clear_accumulator();
-	compute_r_theta();
+	//clear_accumulator();
+	//compute_r_theta();
 	
 	visualization_msgs::Marker points;
-	points.header.frame_id = "/local_origin";
+	points.header.frame_id = "/laser_frame";
 	points.header.stamp = ros::Time::now();
 	points.ns = "points_and_lines";
 	points.pose.orientation.w = 1.0;
@@ -188,10 +192,10 @@ void hough_transform(){
 	points.scale.x = 0.2;
 	points.scale.y = 0.2;
 	points.color.g = 1.0;
-    points.color.a = 1.0;
+    	points.color.a = 1.0;
 
 	visualization_msgs::Marker line_list;
-	line_list.header.frame_id = "/local_origin";
+	line_list.header.frame_id = "/laser_frame";
 	line_list.header.stamp = ros::Time::now();
 	line_list.ns = "points_and_lines";
 	line_list.action = visualization_msgs::Marker::ADD;
@@ -208,9 +212,13 @@ void hough_transform(){
 	//my_lines.angle[0] = 60;
 	
 
-	for(int i = 0; i < 1; i++){
+	for(int i = 0; i < 2; i++){
+		clear_accumulator();
 		
+		compute_r_theta(i);
+
 		Line line1 = find_best_line_and_remove();
+		
 
 		//if(line1.confidence < threshold)
 		//	break;
@@ -313,8 +321,10 @@ void getAllParams(ros::NodeHandle n){
 	n.getParam("sensing/ymin",ymin);
 	n.getParam("sensing/ymax",ymax);
 	
-	n.getParam("line/theta_min",lr_theta_min);
-	n.getParam("line/theta_max",lr_theta_max);
+	n.getParam("line/theta_min",lr_theta_min[0]);
+	n.getParam("line/theta_max",lr_theta_max[0]);
+	n.getParam("line/theta_min2",lr_theta_min[1]);
+	n.getParam("line/theta_max2",lr_theta_max[1]);
 	n.getParam("line/resolution",resolution);
 	n.getParam("line/threshold",threshold);
 	n.getParam("line/min_line_separation_dist",min_line_sep_dist);
@@ -325,8 +335,11 @@ void getAllParams(ros::NodeHandle n){
 	ROS_INFO("ymin: %f", ymin);
 	ROS_INFO("ymax: %f", ymax);
 	
-	ROS_INFO("line region theta min: %d",lr_theta_min);
-	ROS_INFO("line region theta max: %d",lr_theta_max);
+	ROS_INFO("line region theta min1: %d",lr_theta_min[0]);
+	ROS_INFO("line region theta max1: %d",lr_theta_max[0]);
+	ROS_INFO("line region theta min2: %d",lr_theta_min[1]);
+	ROS_INFO("line region theta max2: %d",lr_theta_max[1]);
+
 	ROS_INFO("line resolution: %f", resolution);
 	ROS_INFO("line threshold: %d", threshold);
 	ROS_INFO("min_line_sep_dist: %d", min_line_sep_dist);

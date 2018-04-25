@@ -20,14 +20,14 @@ float Ki;
 enum Prev{Initial,Below,Above};
 Prev prev = Initial;
 
-enum Altitude_Mode{FromBelow,FromAbove,Centroid};
-Altitude_Mode alt_mode = FromAbove;
+enum Altitude_Mode{Downward, Upward};
+Altitude_Mode alt_mode = Downward;
 
 int laser_rf_offset = 0;						// lidar (Sweep) leads robot x axis (east) by 0 degrees in simulation and 0 degrees on the actual quad
 
 float max_vel_h = 0.5;							// max velocities
 float max_vel_z = 0.5;
-float nominal_vel = 0;
+float nominal_vel = 0.3;
 
 PID h_pid = {0.5,0.05,0.0};						// PID parameters	
 PID z_pid = {0.5,0.05,0.0};						// kp = 1.0 ; kd = 0.15;
@@ -37,8 +37,7 @@ float desired_buffer = 1.5;
 float move_threshold_vertical = 0.7;
 float move_threshold_horizontal = 0.7;
 	
-int vert_conf_threshold = 5;
-int hor_conf_threshold = 5;
+int confidence_threshold = 5;
 
 									
 
@@ -136,17 +135,46 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	// horizontal control:	// maybe increase update rate because yaw updates are coming fast???
 	
 	if(new_hor_data){			// else, keep controlling with old values 	
-		if(hor_lines.confidence[0] > hor_conf_threshold){
+		if(hor_lines.confidence[0] > confidence_threshold){
 			int theta_rf_hold = hor_lines.angle[0] + laser_rf_offset;
 			hold_error = (hor_lines.dist[0] - desired_wall_dist);
 			hold_velocity = computePID(hold_error, prev_hold_errors, h_pid, max_vel_h);
 
 			x_rf_hold = hold_velocity * cos (theta_rf_hold * M_PI / 180.0);
 			y_rf_hold = hold_velocity * sin (theta_rf_hold * M_PI / 180.0);
+
+
+			/*
+			line_length = sqrt(pow((x2[0] - x1[0]), 2) + pow((y2[0] - y1[0]), 2));
+			line_mid_point = line_length/2.0;
+			*/
+
+			int theta_rf_centering = theta_rf_hold - 90;
+			left_point = x1 * cos (theta_rf_centering * M_PI / 180.0) + y1 * sin (theta_rf_centering * M_PI / 180.0);
+			right_point = x2 * cos (theta_rf_centering * M_PI / 180.0) + y2 * sin (theta_rf_centering * M_PI / 180.0);
+			centering_error = (left_point + right_point) / 2.0;
+			centering_velocity = computePID(centering_error, prev_centering_errors, h_pid, max_vel_h);
+
+			x_rf_centering = centering_velocity * cos (theta_rf_centering * M_PI / 180.0);
+			y_rf_centering = centering_velocity * sin (theta_rf_centering * M_PI / 180.0);
+	
 			
+			/*
+
+			centering_error = (hor_lines.x2[0] + hor_lines.x1[0]) / 2.0;
+			
+			centering_velocity = computePID(centering_error, prev_centering_errors, h_pid, max_vel_h);
+
+			int theta_rf_centering = theta_rf_hold - 90;
+			x_rf_centering = centering_velocity * cos (theta_rf_centering * M_PI / 180.0);
+			y_rf_centering = centering_velocity * sin (theta_rf_centering * M_PI / 180.0);
+			*/
+			
+			/*
 			int theta_rf_move = theta_rf_hold - 90;
 			x_rf_move = nominal_vel * cos (theta_rf_move * M_PI / 180.0);
 			y_rf_move = nominal_vel * sin (theta_rf_move * M_PI / 180.0);
+			*/
 
 		}
 		else{
@@ -160,8 +188,73 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	// altitude control:
 
 	if(new_vert_data){
-		if(vert_lines.confidence[0] > vert_conf_threshold){
+		if(vert_lines.confidence[0] > confidence_threshold){		// line (surface) found Below;
+
+			ground_clearance = vert_lines.dist[0];
+
+
+
+
+		if(vert_lines.confidence[1] > confidence_threshold){		// line (surface) found Above;
+			top_clearance = vert_lines.dist[1];
 			
+			if(top_clearance < clearance_threshold){
+				Altitude_Mode = Downward;
+				altitude_velocity = -1 * nominal_velocity;
+			}
+		}
+
+
+	// state machine:
+
+			if(vert_lines.confidence[0] > confidence_threshold || vert_lines.confidence[1] > confidence_threshold)
+			{
+
+				if(ground_clearance < clearance_threshold){ // if close to ground, move up
+					Altitude_Mode = Upward;	
+					altitude_velocity = nominal_velocity;
+				}
+
+				else if(top_clearance < clearance_threshold){ // if close to top, move down
+					Altitude_Mode = Downward;
+					altitude_velocity = -1 * nominal_velocity
+				}
+			}
+
+			else{		// continue doing what you were doing till you get to the top or bottom
+				altitude_velocity = altitude_velocity;
+			}
+			/*
+			if(Altitude_Mode == Downward){
+				if(clearance > zero_vel_altitude){	// downward nominal velocity	
+					altitude_velocity = nominal_velocity;
+				}
+
+				else if(clearance > recover_altitude){	// column follow complete; hover at constant altitude
+					altitude_velocity = 0;
+				}
+
+				else{						// safety net to avoid danger of crashing into ground/deck; ascend;
+					altitude_velocity = recover_altitude_vel;
+				}
+			}
+			
+			else if(Altitude_Mode == Upward){
+				if(clearance > zero_vel_altitude){	//upward nominal velocity	
+					altitude_velocity = nominal_velocity;
+				}
+
+				else if(clearance > recover_altitude){	// column follow complete; hover at constant altitude
+					altitude_velocity = 0;
+				}
+
+				else{						// safety net to avoid danger of crashing into ground/deck; ascend;
+					altitude_velocity = recover_altitude_vel;
+				}
+			}
+			
+			*/
+			/*
 			float z_offset_from_desired;
 			if(alt_mode == FromAbove){
 				z_offset_from_desired = vert_lines.x2[0] - desired_buffer;
@@ -181,28 +274,49 @@ mavros_msgs::PositionTarget computeTargetVel(){
 			va_hold_velocity = computePID(va_hold_error, prev_va_hold_errors, h_pid, max_vel_h);
 			va_x_rf_hold = va_hold_velocity;
 			va_y_rf_hold = 0;
+			*/
 		}
 		else{
-			prev_altitude_errors[0] = 0;	prev_altitude_errors[1] = 0;	prev_altitude_errors[2] = 0;	prev_altitude_errors[3] = 0;	prev_altitude_errors[4] = 0;
-			prev_va_hold_errors[0] = 0;	prev_va_hold_errors[1] = 0;	prev_va_hold_errors[2] = 0;	prev_va_hold_errors[3] = 0;	prev_va_hold_errors[4] = 0;
+			//prev_altitude_errors[0] = 0;	prev_altitude_errors[1] = 0;	prev_altitude_errors[2] = 0;	prev_altitude_errors[3] = 0;	prev_altitude_errors[4] = 0;
+			//prev_va_hold_errors[0] = 0;	prev_va_hold_errors[1] = 0;	prev_va_hold_errors[2] = 0;	prev_va_hold_errors[3] = 0;	prev_va_hold_errors[4] = 0;
 		}
 		new_vert_data = 0;
 	}
 
+
 	// state machine:
 	
+
+			if(hor_lines.confidence[0] > confidence_threshold){
+				target_vel.velocity.x = x_rf_hold + x_rf_centering;
+				target_vel.velocity.y = y_rf_hold + y_rf_centering;
+			}
+			else{
+				target_vel.velocity.x = 0;
+				target_vel.velocity.y = 0;
+			}
+
+			if(vert_lines.confidence[0] > confidence_threshold){
+				target_vel.velocity.z = altitude_velocity;
+			}
+			else{
+				target_vel.velocity.z = 0;
+			}
+			
+	
 	// horizontal:
-	//if(fabs(altitude_error) < move_threshold_vertical && fabs(hold_error) < move_threshold_horizontal && vert_lines.confidence[0] > vert_conf_threshold && hor_lines.confidence[0] > hor_conf_threshold){
-	if(vert_lines.confidence[0] > vert_conf_threshold && hor_lines.confidence[0] > hor_conf_threshold){
+
+	/*
+	if(fabs(altitude_error) < move_threshold_vertical && fabs(hold_error) < move_threshold_horizontal && vert_lines.confidence[0] > confidence_threshold && hor_lines.confidence[0] > confidence_threshold){
 		target_vel.velocity.x = x_rf_hold + x_rf_move;
 		target_vel.velocity.y = y_rf_hold + y_rf_move;
 	}
 	else{
-		if(hor_lines.confidence[0] > hor_conf_threshold){
+		if(hor_lines.confidence[0] > confidence_threshold){
 			target_vel.velocity.x = x_rf_hold;
 			target_vel.velocity.y = y_rf_hold;
 		}
-		else if(vert_lines.confidence[0] > vert_conf_threshold){
+		else if(vert_lines.confidence[0] > confidence_threshold){
 			target_vel.velocity.x = va_x_rf_hold;
 			target_vel.velocity.y = va_y_rf_hold;
 		}
@@ -213,12 +327,14 @@ mavros_msgs::PositionTarget computeTargetVel(){
 	}
 
 	// vertical:
-	if(vert_lines.confidence[0] > vert_conf_threshold){
+	if(vert_lines.confidence[0] > confidence_threshold){
 		target_vel.velocity.z = altitude_velocity;
 	}
 	else{
 		target_vel.velocity.z = 0;
 	}
+
+	*/
 
 	ROS_INFO("altitude_error %f",altitude_error);
 	ROS_INFO("dist_error %f", hold_error);
@@ -242,8 +358,8 @@ void getAllParams(ros::NodeHandle n){
 
 	n.getParam("/control/laser_rf_offset",laser_rf_offset);
 
-	n.getParam("/hor/line/threshold",hor_conf_threshold);
-	n.getParam("/vert/line/threshold",vert_conf_threshold);
+	n.getParam("/hor/line/threshold",confidence_threshold);
+	n.getParam("/vert/line/threshold",confidence_threshold);
 
 	n.getParam("/flight/desired_wall_dist", desired_wall_dist);
 	n.getParam("/flight/desired_buffer", desired_buffer);
@@ -264,8 +380,8 @@ void getAllParams(ros::NodeHandle n){
 
 	ROS_INFO("laser_rf_offset: %d",laser_rf_offset);
 	
-	ROS_INFO("hor line threshold: %d", hor_conf_threshold);
-	ROS_INFO("vert line threshold: %d", vert_conf_threshold);
+	ROS_INFO("hor line threshold: %d", confidence_threshold);
+	ROS_INFO("vert line threshold: %d", confidence_threshold);
 
 	ROS_INFO("desired_wall_dist: %f",desired_wall_dist);
 	ROS_INFO("desired_buffer: %f",desired_buffer);
