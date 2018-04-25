@@ -1,0 +1,5 @@
+<launch>
+<include file="$(find mavros)/launch/px4.launch"/>
+<include file="$(find sweep_ros)/launch/sweep_both.launch"/>
+<include file="$(find wall_follow)/launch/columnLoop.launch"/>
+</launch>
