@@ -27,7 +27,7 @@ int laser_rf_offset = 0;						// lidar (Sweep) leads robot x axis (east) by 0 de
 
 float max_vel_h = 0.5;							// max velocities
 float max_vel_z = 0.5;
-float nominal_vel = 0.3;
+float nominal_vel = 0;
 
 PID h_pid = {0.5,0.05,0.0};						// PID parameters	
 PID z_pid = {0.5,0.05,0.0};						// kp = 1.0 ; kd = 0.15;
