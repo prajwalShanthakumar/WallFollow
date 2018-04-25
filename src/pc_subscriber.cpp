@@ -29,10 +29,15 @@ float y;
 //------------------------------------------------------------------------------------------------- Parameters
 
 
-float xmin = 0.5;		// for preprocess cloud		
+/*float xmin = 0.5;		// for preprocess cloud		
 float xmax = 10;
 float ymin = 0.5;
-float ymax = 10;
+float ymax = 10;*/
+
+float xmin[2];
+float xmax[2];
+float ymin[2];
+float ymax[2];
 				// for line extraction
 int theta_max = 360;			//# degrees
 int r_lim = 15;				//# metres
@@ -66,13 +71,19 @@ XY r_theta_to_XY(float r, float theta){
 
 
 void preprocess_cloud(const sensor_msgs::PointCloud2::ConstPtr& msg){
-	valid_indices.clear();
+	//valid_indices.clear();
 	
 	
 	pcl::fromROSMsg (*msg, cloud);								// converting pointcloud2 to cloud of XYZ points
 
 	for(int i = 0; i < cloud.size(); i++){
 	//ROS_INFO("I heard: %d %f %f", i, cloud[i].x, cloud[i].y);
+
+		
+		/*if( sqrt(pow(cloud[i].x,2)  + pow(cloud[i].y,2)) > 1 && sqrt(pow(cloud[i].x,2)  + pow(cloud[i].y,2)) < 15){
+			valid_indices.push_back(i);
+		}*/
+		/*
 
 		if(cloud[i].x < xmax && cloud[i].x > xmin && cloud[i].y < ymax && cloud[i].y > ymin){
 			//if(atan2 is between limits)
@@ -92,16 +103,32 @@ void preprocess_cloud(const sensor_msgs::PointCloud2::ConstPtr& msg){
 		else if(cloud[i].x < -1*xmin && cloud[i].x > -1*xmax && cloud[i].y < ymax && cloud[i].y > ymin){
 			valid_indices.push_back(i);
 		}
+		*/
+
 	}
 
 	//ROS_INFO("xmin:%f xmax:%f ymin:%f ymax:%f",xmin, xmax, ymin, ymax);
 	//ROS_INFO("cloud size: %d", cloud.size());
-	//ROS_INFO("count: %u", valid_indices.size());
+	ROS_INFO("initial count: %u", valid_indices.size());
 }
 
 
 
+void filter_cloud(int id){
 
+	valid_indices.clear();
+
+	for(int i = 0; i < cloud.size(); i++){
+		if( sqrt(pow(cloud[i].x,2)  + pow(cloud[i].y,2)) > 1 && sqrt(pow(cloud[i].x,2)  + pow(cloud[i].y,2)) < 14){
+			
+			if(cloud[i].x < xmax[id] && cloud[i].x > xmin[id] && cloud[i].y < ymax[id] && cloud[i].y > ymin[id]){
+				valid_indices.push_back(i);
+
+			}
+			
+		}
+	}
+}
 
 void clear_accumulator(){
 	for(int theta = 0; theta < theta_max; theta++){
@@ -179,6 +206,7 @@ Line find_best_line_and_remove(){
 }
 
 void hough_transform(){
+
 	//clear_accumulator();
 	//compute_r_theta();
 	
@@ -213,6 +241,10 @@ void hough_transform(){
 	
 
 	for(int i = 0; i < 2; i++){
+
+
+		filter_cloud(i);
+
 		clear_accumulator();
 		
 		compute_r_theta(i);
@@ -309,6 +341,8 @@ void pc_Callback(const sensor_msgs::PointCloud2::ConstPtr& msg){
 	//ros::Time begin = ros::Time::now();
 	preprocess_cloud(msg);
 	hough_transform();
+	
+
 	//ros::Time end = ros::Time::now();
 	//ROS_INFO("callback (line extraction) time = %f", end.toSec() - begin.toSec());
 	
@@ -316,10 +350,15 @@ void pc_Callback(const sensor_msgs::PointCloud2::ConstPtr& msg){
 
 void getAllParams(ros::NodeHandle n){
 	
-	n.getParam("sensing/xmin",xmin);
-	n.getParam("sensing/xmax",xmax);
-	n.getParam("sensing/ymin",ymin);
-	n.getParam("sensing/ymax",ymax);
+	n.getParam("sensing/xmin",xmin[0]);
+	n.getParam("sensing/xmax",xmax[0]);
+	n.getParam("sensing/ymin",ymin[0]);
+	n.getParam("sensing/ymax",ymax[0]);
+
+	n.getParam("sensing/xmin2",xmin[1]);
+	n.getParam("sensing/xmax2",xmax[1]);
+	n.getParam("sensing/ymin2",ymin[1]);
+	n.getParam("sensing/ymax2",ymax[1]);
 	
 	n.getParam("line/theta_min",lr_theta_min[0]);
 	n.getParam("line/theta_max",lr_theta_max[0]);
