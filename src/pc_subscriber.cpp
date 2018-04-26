@@ -369,10 +369,16 @@ void getAllParams(ros::NodeHandle n){
 	n.getParam("line/min_line_separation_dist",min_line_sep_dist);
 	n.getParam("line/min_line_separation_angle",min_line_sep_angle);
 
-	ROS_INFO("xmin: %f", xmin);
-	ROS_INFO("xmax: %f", xmax);
-	ROS_INFO("ymin: %f", ymin);
-	ROS_INFO("ymax: %f", ymax);
+	ROS_INFO("xmin: %f", xmin[0]);
+	ROS_INFO("xmax: %f", xmax[0]);
+	ROS_INFO("ymin: %f", ymin[0]);
+	ROS_INFO("ymax: %f", ymax[0]);
+
+	ROS_INFO("xmin2: %f", xmin[1]);
+	ROS_INFO("xmax2: %f", xmax[1]);
+	ROS_INFO("ymin2: %f", ymin[1]);
+	ROS_INFO("ymax2: %f", ymax[1]);
+	
 	
 	ROS_INFO("line region theta min1: %d",lr_theta_min[0]);
 	ROS_INFO("line region theta max1: %d",lr_theta_max[0]);
