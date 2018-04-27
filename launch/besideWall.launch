@@ -3,4 +3,6 @@
 	<node pkg="wall_follow" type="wall_follow_pc_subscriber" name="pc_subscriber" ns="hor"/>
 	<node pkg="wall_follow" type="wall_follow_pc_subscriber" name="pc_subscriber" ns="vert"/>
 	<node pkg="wall_follow" type="wall_follow_besideWall" name="besideWall"/>
+	<node pkg="wall_follow" type="wall_follow_marker_fix" name="marker_fix" ns="hor"/>
+	<node pkg="wall_follow" type="wall_follow_marker_fix" name="marker_fix" ns="vert"/>
 </launch>

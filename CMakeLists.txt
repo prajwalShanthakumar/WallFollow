@@ -225,6 +225,11 @@ add_executable(${PROJECT_NAME}_columnLoop src/columnLoop.cpp)
 target_link_libraries(${PROJECT_NAME}_columnLoop ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_columnLoop ${catkin_LIBRARIES})
 
+add_executable(${PROJECT_NAME}_marker_fix src/marker_fix.cpp)
+target_link_libraries(${PROJECT_NAME}_marker_fix ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_marker_fix ${catkin_LIBRARIES})
+
+
 
 
 #############
