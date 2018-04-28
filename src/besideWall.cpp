@@ -40,6 +40,8 @@ float move_threshold_horizontal = 0.7;
 int vert_conf_threshold = 5;
 int hor_conf_threshold = 5;
 
+int loop_count = 0;
+int loop_count_threshold = 30;
 									
 
 // get rid of these
@@ -88,6 +90,13 @@ void hor_lines_cb(const wall_follow::Lines::ConstPtr& lines){
 	//ROS_INFO("first line: dist:%2.4f, angle:%d, confidence:%d",lines->dist[0], lines->angle[0], lines->confidence[0]);
 	hor_lines = *lines;
 	new_hor_data = 1;
+	if(current_state.armed && (current_state.mode.compare("OFFBOARD") == 0)){
+		loop_count++;
+		
+	}
+	ROS_INFO("loop_count = %d",loop_count);
+	ROS_INFO("mode = %s",current_state.mode.c_str());
+	
 }
 
 void vert_lines_cb(const wall_follow::Lines::ConstPtr& lines){
@@ -125,6 +134,12 @@ float computePID(float error, float prev_error[], PID pid, float max_vel){
 
 
 mavros_msgs::PositionTarget computeTargetVel(){
+
+	if(loop_count >= loop_count_threshold){
+		loop_count = 0;
+		nominal_vel = -1 * nominal_vel;
+	}
+
 	mavros_msgs::PositionTarget target_vel;
 	target_vel.header.stamp = ros::Time::now();
 	target_vel.header.frame_id = "local_frame";
@@ -249,6 +264,7 @@ void getAllParams(ros::NodeHandle n){
 	n.getParam("/flight/desired_buffer", desired_buffer);
 	n.getParam("/flight/move_threshold_vertical", move_threshold_vertical);
 	n.getParam("/flight/move_threshold_horizontal", move_threshold_horizontal);
+	n.getParam("/flight/loop_count_threshold", loop_count_threshold);
 
 
 	ROS_INFO("Kp: %f", h_pid.Kp);

@@ -35,7 +35,7 @@ control:
 
   max_vel_h: 0.5 # max hold (compensation) velocity in hor direction
   max_vel_z: 0.4 # max compensation velocity in Z direction
-  nominal_vel: 0.0 # nominal velocity independent 	of compensation velocity
+  nominal_vel: 0.3 # nominal velocity independent 	of compensation velocity
 
   Kp: 0.4
   Kd: 0.2
@@ -51,6 +51,7 @@ flight:
   move_threshold_vertical: 0.7
   move_threshold_horizontal: 0.7
 
+  loop_count_threshold: 30
 
 
 
