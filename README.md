@@ -20,10 +20,9 @@ Refer to this document for help regarding PX4 and Mavros and some clarity on sof
 * PCL:
 * Gazebo models and worlds from this repo:
 
+## Launch files
 
-## How to launch:
-
-## How to visualize:
+## Nodes
 
 ## Parameters:
 
