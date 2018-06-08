@@ -176,6 +176,7 @@ add_definitions(${PCL_DEFINITIONS})
 add_executable(${PROJECT_NAME}_velocity_publisher src/velocity_publisher.cpp)
 target_link_libraries(${PROJECT_NAME}_velocity_publisher ${catkin_LIBRARIES})
 add_dependencies(${PROJECT_NAME}_velocity_publisher ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME}_velocity_publisher ${PROJECT_NAME}_gencpp)
 
 add_executable(${PROJECT_NAME}_scan_to_pc src/scan_to_pc.cpp)
 target_link_libraries(${PROJECT_NAME}_scan_to_pc ${catkin_LIBRARIES})
