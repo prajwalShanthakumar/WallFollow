@@ -27,10 +27,14 @@ Refer to this document for help regarding PX4 and Mavros and some clarity on sof
 2. mavros_px4 help: .bashrc
 3. Make posix sitl gazebo
 4. Source devel/setup.bash
+5. Simulation:  copy and replace the models and worlds folders under your ~/src/Firmware/Tools/sitl_gazebo with those from the sitl_gazebo_wall_follow_sim repository
+ edit ~/src/Firmware/launch/mavros_posix_sitl.launch for correct WORLD: <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/2_wall_new.world"/>
 
 ## Launch files
 
 ## Nodes
+
+
 
 ## Parameters:
 
