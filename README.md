@@ -21,6 +21,8 @@ Refer to this document for help regarding PX4 and Mavros and some clarity on sof
 ## Dependencies
 * Catkin_tools: http://catkin-tools.readthedocs.io/en/latest/installing.html
 * Gazebo models and worlds from this repo: 
+* PCL
+* Sweep ROS wrapper
 
 ## Steps:
 1. Convenience script
@@ -55,6 +57,10 @@ besideWall:
 columnLoop:
 
 
+
+/vert/pc2
+/vert/ho/li
+/mavros/setpoint_raw/local
 
 ## Parameters:
 
