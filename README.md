@@ -31,8 +31,28 @@ Refer to this document for help regarding PX4 and Mavros and some clarity on sof
  edit ~/src/Firmware/launch/mavros_posix_sitl.launch for correct WORLD: <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/2_wall_new.world"/>
 
 ## Launch files
+1. Flight beside bridge girder
+Simulation: $ roslaunch wall_follow besideWall_simulation.launch
+Real World: $ roslaunch wall_follow besideWall_real.launch 
+
+2. Flight along a bridge column
+Simulation: 
+Simulation: $ roslaunch wall_follow columnLoop_simulation.launch
+Real World: $ roslaunch wall_follow columnLoop_real.launch 
 
 ## Nodes
+/hor/pc_subscriber
+### 3.2.1 Subscribed topics
+* */hor/pc2* (sensor_msgs/NavSatFix).
+
+### 3.2.2 Published topics
+
+* */mavros/uav/plume_pos* (sensor_msgs/NavSatFix) - publishes the lat/long position of the plume to UGV.
+* */dye_detection/detect_image* (image_transport/Publisher) - publishes images of the detection result.
+
+/vert/pc_subscriber
+besideWall:
+columnLoop:
 
 
 
