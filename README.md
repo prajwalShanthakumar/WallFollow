@@ -8,7 +8,6 @@ The branches vert_pc (simulation) and vert_eagle (actual UAV) are essentially th
 
 ## Pre-requisites
 * ROS Kinetic + Gazebo 7
-* Gazebo
 * Mavros: ROS node to communicate with PX4 firmware
 * PX4 firmware : code for low level UAV flight control (on actual Pixhawk hardware or as software-in-the-loop (SITL) for Gazebo simulation)
 
@@ -57,7 +56,7 @@ Published topic:
 
 * */hor/ho/li* (wall_follow/Lines)
 
-### vert/pc_subscriber
+### /vert/pc_subscriber
 
 Vertical point cloud subscriber: 
 * Processes the vertical lidar data (filtering + Hough Transform)
