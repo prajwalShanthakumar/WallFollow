@@ -43,24 +43,26 @@ Simulation: $ roslaunch wall_follow columnLoop_simulation.launch
 Real World: $ roslaunch wall_follow columnLoop_real.launch 
 
 ## Nodes
-/hor/pc_subscriber
+* /hor/pc_subscriber: Horizontal point cloud subscriber: Processes the horizontal lidar data (filtering + Hough Transform) and publishes line(s) that estimate bridge structure
 ### 3.2.1 Subscribed topics
-* */hor/pc2* (sensor_msgs/NavSatFix).
-
+* */hor/pc2* (sensor_msgs/PointCloud2)
 ### 3.2.2 Published topics
+* */hor/ho/li* (wall_follow/Lines)
 
-* */mavros/uav/plume_pos* (sensor_msgs/NavSatFix) - publishes the lat/long position of the plume to UGV.
-* */dye_detection/detect_image* (image_transport/Publisher) - publishes images of the detection result.
+* /vert/pc_subscriber: Vertical point cloud subscriber: Processes the vertical lidar data (filtering + Hough Transform) and publishes line(s) that estimate bridge structure
+### 3.2.1 Subscribed topics
+* */vert/pc2* (sensor_msgs/PointCloud2)
+### 3.2.2 Published topics
+* */vert/ho/li* (wall_follow/Lines)
 
-/vert/pc_subscriber
-besideWall:
-columnLoop:
+* /besideWall:
+### 3.2.1 Subscribed topics
+* */hor/ho/li* (wall_follow/Lines)
+* */vert/ho/li* (wall_follow/Lines)
+### 3.2.2 Published topics
+* */mavros/setpoint_raw/local* (mavros_msgs/PositionTarget)
 
 
-
-/vert/pc2
-/vert/ho/li
-/mavros/setpoint_raw/local
 
 ## Parameters:
 
