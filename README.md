@@ -43,9 +43,11 @@ Simulation: $ roslaunch wall_follow columnLoop_simulation.launch
 Real World: $ roslaunch wall_follow columnLoop_real.launch 
 
 ## Nodes
-**/hor/pc_subscriber**
+### /hor/pc_subscriber
 
-Horizontal point cloud subscriber: Processes the horizontal lidar data (filtering + Hough Transform) and publishes line(s) that estimate bridge structure
+Horizontal point cloud subscriber: 
+* Processes the horizontal lidar data (filtering + Hough Transform) 
+* Publishes line(s) that estimate bridge structure
 
 Subscribed topic:
 
@@ -55,9 +57,11 @@ Published topic:
 
 * */hor/ho/li* (wall_follow/Lines)
 
-**/vert/pc_subscriber**
+### vert/pc_subscriber
 
-Vertical point cloud subscriber: Processes the vertical lidar data (filtering + Hough Transform) and publishes line(s) that estimate bridge structure
+Vertical point cloud subscriber: 
+* Processes the vertical lidar data (filtering + Hough Transform)
+* Publishes line(s) that estimate bridge structure
 
 Subscribed topic:
 
@@ -67,7 +71,7 @@ Published topic:
 
 * */vert/ho/li* (wall_follow/Lines)
 
-**/besideWall**
+### /besideWall
 
 Flight alongside the bridge girder:
  * Maintains desired distance perpendicular to the girder
