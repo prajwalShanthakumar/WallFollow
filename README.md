@@ -43,23 +43,44 @@ Simulation: $ roslaunch wall_follow columnLoop_simulation.launch
 Real World: $ roslaunch wall_follow columnLoop_real.launch 
 
 ## Nodes
-* /hor/pc_subscriber: Horizontal point cloud subscriber: Processes the horizontal lidar data (filtering + Hough Transform) and publishes line(s) that estimate bridge structure
-### 3.2.1 Subscribed topics
+**/hor/pc_subscriber**
+
+Horizontal point cloud subscriber: Processes the horizontal lidar data (filtering + Hough Transform) and publishes line(s) that estimate bridge structure
+
+Subscribed topic:
+
 * */hor/pc2* (sensor_msgs/PointCloud2)
-### 3.2.2 Published topics
+
+Published topic:
+
 * */hor/ho/li* (wall_follow/Lines)
 
-* /vert/pc_subscriber: Vertical point cloud subscriber: Processes the vertical lidar data (filtering + Hough Transform) and publishes line(s) that estimate bridge structure
-### 3.2.1 Subscribed topics
+**/vert/pc_subscriber**
+
+Vertical point cloud subscriber: Processes the vertical lidar data (filtering + Hough Transform) and publishes line(s) that estimate bridge structure
+
+Subscribed topic:
+
 * */vert/pc2* (sensor_msgs/PointCloud2)
-### 3.2.2 Published topics
+
+Published topic:
+
 * */vert/ho/li* (wall_follow/Lines)
 
-* /besideWall:
-### 3.2.1 Subscribed topics
+**/besideWall**
+
+Flight alongside the bridge girder:
+ * Maintains desired distance perpendicular to the girder
+ * Maintains desired altitude w.r.t the top of the girder
+ * Contanst fixed velocity parallel to the girder
+ 
+Subscribed topics:
+
 * */hor/ho/li* (wall_follow/Lines)
 * */vert/ho/li* (wall_follow/Lines)
-### 3.2.2 Published topics
+
+Published topic:
+
 * */mavros/setpoint_raw/local* (mavros_msgs/PositionTarget)
 
 
