@@ -4,7 +4,7 @@ This wall_follow package contains code for navigation around bridge structures u
 
 
 ## Pre-requisites
-* ROS Kinetic + Gazebo 7
+* Ubuntu 16.04 + ROS Kinetic + Gazebo 7
 * Mavros: ROS node to communicate with PX4 firmware
 * PX4 firmware : code for low level UAV flight control (on actual Pixhawk hardware or as software-in-the-loop (SITL) for Gazebo simulation)
 
@@ -16,7 +16,7 @@ The ubuntu_sim_ros_gazebo.sh script from the PX4 website may help install all th
 
 ## Dependencies
 * Catkin_tools: http://catkin-tools.readthedocs.io/en/latest/installing.html (other catkin build tool will also likely work)
-* PCL: http://wiki.ros.org/pcl (It should be included in the standard ROS installation)
+* PCL: http://wiki.ros.org/pcl (likely included in the standard ROS installation)
 * Scanse Sweep ROS driver: https://github.com/scanse/sweep-ros.git (Reads data from the Scanse Sweep LIDAR and publishes it as a point cloud; not required for simulation)
 * Gazebo models and worlds from this repository: https://github.com/raaslab/sitl_gazebo_wall_follow.git (only required for simulation)
 
@@ -102,8 +102,14 @@ Published topic:
 
 ## Parameters:
 
+### /besideWall
+The parameters in the besideWall_params.yaml file control the flight beside the bridge girder. Please refer to the comments in the yaml file itself for documentation.
+
+### /columnLoop
+The parameters in the columnLoop_params.yaml file control the flight along a bridge column. Please refer to the comments in the yaml file itself for documentation.
+
 
 ## Supporting documentation
 * ICRA paper:
 * ISER paper:
-* Video: 
+* Video: https://www.youtube.com/watch?v=DtDk0OMeIXs 
